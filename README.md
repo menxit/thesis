@@ -12,6 +12,7 @@ correlatore: Federico Spini
 dedica: Questa è la dedica
 toc: true
 toc-depth: 2
+lof: true
 documentclass: report
 fontsize: 12pt
 linestretch: 1.25
