@@ -15,7 +15,7 @@ L = { L1 -> L2 -> L3 -> L4 }
 
 Partendo da questa lista, si costruisce un albero di questo tipo: per ciascun elemento della lista calcoliamo l'hash. Poi per ciascuna coppia di hash calcoliamo l'hash della concatenazione, fino ad arrivare alla radice di quest'albero.
 
-![Merkle tree](./figure/merkle.png){width=400}
+![Merkle tree](./figure/merkle.png){width=450}
 
 Alice possiede la lista L e l'intero albero, Bob invece possiede esclusivamente il nodo radice. 
 
@@ -95,7 +95,7 @@ Perché tutto questo dovrebbe risolvere il problema della manomissione di blocch
 
 Immaginiamo ora che un nodo malevolo voglia manomettere il blocco numero due della catena:
 
-![Blockchain con blocchi manomessi](./figure/blocks-red.pdf){width=400}
+![Blockchain con un blocco manomesso minato](./figure/blocks-red.pdf){width=400}
 
 Come è possibile vedere dalla figura, manomettere il blocco numero due, implica invalidare i blocchi 2, 3 e 4; infatti variando il valore del merkel root, varia anche il valore dell'hash, che con tutta probabilità non avrà più i primi D caratteri uguali a zero. Questo significa che il nodo malevolo dovrà calcolare un nuovo nonce per validare il blocco numero due.
 
@@ -111,4 +111,4 @@ In particolare sarà possibile riuscire a disfare un blocco confermato e ricalco
 
 Portiamo all'estremo questo ragionamento e ipotizziamo che esista un nodo con potenza computazionale maggiore del 50%, come possiamo evitare che il nodo disfi anche in questa situazione blocchi precedenti?
 
-L'idea qui è di assegnare a ogni miner capace di calcolare il nonce correto dell'ultimo blocco una ricompensa. A questo punto, un nodo con tutta questa potenza computazionale, preferirà minare e ottenere i reward di ciascun blocco invece che manomettere blocchi passati, minando in questo modo la bontà del network del quale è padrone indiscusso.
+L'idea qui è di assegnare a ogni miner capace di calcolare il nonce correto dell'ultimo blocco una ricompensa. A questo punto, un nodo con tutta questa potenza computazionale, preferirà minare e ottenere i reward di ciascun blocco invece che manomettere blocchi passati, minando in questo modo la bontà del network del quale è padrone indiscusso[@nakamoto2008bitcoin].
