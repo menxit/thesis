@@ -11,9 +11,9 @@ relatore: Alberto Paoluzzi
 correlatore: Federico Spini
 dedica: Questa è la dedica
 toc: true
-toc-depth: 2
+toc-depth: 1
 lof: true
-documentclass: report
+documentclass: book
 fontsize: 12pt
 linestretch: 1.25
 bibliography: bibliography.bib
