@@ -1,7 +1,5 @@
 pandoc 	--filter pandoc-citeproc \
-	0-OPTIONS.org \
-	1-ACKNOWLEDGEMENT.org \
-	2-INTRODUCTION.org \
-	README.org \
-	4-CONCLUSION.org \
+	0-OPTIONS.md \
+	1-ACKNOWLEDGEMENT.md \
+	README.md \
 	-o $1
