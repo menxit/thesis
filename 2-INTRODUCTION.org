@@ -1,0 +1,2 @@
+\chapter*{Introduzione}
+![Blockchain con blocchi non manomessi\label{blocchi-manomessi}](./figure/blocks-green.pdf){width=400}
