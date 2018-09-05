@@ -1,0 +1,93 @@
+* FulgurHub: implementazione in TypeScript e misurazione di performance
+** Introduzione
+- 2008 paper di Sathosi Nakamoto e pubblicazione protocollo BitCoin
+- Stato del network dieci anni dopo
+- Problemi di scalabilità
+- Soluzioni al problema della scalabilità
+	- Algoritmo di consenso
+	- Sharding
+	- OffChain
+- Lavoro di questa tesi
+  - Stato dell'arte
+	- Design e implementazione di un IPC
+	- Progettazione, sviluppo e prove sperimentali di Fulgur Hub
+- Descrizione capitoli
+  
+** Background
+*** Blockchain, smart contract
+*** Soluzioni OffChain
+**** State channel
+**** Payment channel
+***** Apertura di un payment channel
+***** Schema propose/accept
+***** Transazioni OffChain-OffChain
+**** IPC
+***** Schema detach/attach
+***** Hot withdraw
+***** Hot refill
+**** Chiusura di un payment channel
+*** Fulgur Hub
+**** Motivazioni
+***** Pagamenti ibridi
+***** Trustless
+***** Non censurabile
+***** Anonimato
+***** Autogestito
+**** Tipologie di transazioni
+***** Transazioni omogenee
+***** Transazioni miste
+***** Transazioni esterne
+
+** Analisi
+*** Obiettivi
+**** Non autogestito
+**** Cosa è stato implementato
+*** Descrizione generale dell'architettura
+**** Lo smart contract
+**** Il client
+**** L'hub
+*** Apertura di un canale
+*** Pagamenti omogenei
+**** Transazioni OnChain-OnChain
+**** Transazioni OffChain-OffChain
+*** Pagamenti ibridi
+**** Transazioni OffChain-OnChain
+**** Transazioni OnChain-OffChain
+*** Riscossione di un pending token
+*** Chiusura di un canale
+*** Gestione dei fallimenti
+**** B non invia la ricevuta di pagamento ad A
+**** Generazione di una miriade di token
+**** L'hub non permette di attaccare un token
+**** L'hub non permette di staccare un token
+**** Tentativo di pagamento con un token scaduto
+**** A si rifiuta di regolare un trasferimento nei confronti dell'hub
+**** Tentativo di ritirare un pending token già usato
+**** Mancanza di cooperazione nel ricevere un pagamento
+
+** Progettazione e implementazione
+*** Lo smartcontract EthereumSmartContract
+*** Client
+**** ClientPrivateCommands
+**** ClientPublicCommand
+**** LevelDBClientDatabase
+**** ClientMonitorService
+*** Hub
+**** HubPrivateCommands
+**** HubPublicCommands
+**** RedisHubDatabase
+**** HubMonitorService
+
+** Prove e risultati sperimentali
+*** Cosa e perché
+**** Transazioni OffChain-OffChain seriali
+**** Transazioni OffChain-OffChain concorrenti
+*** Come
+**** Benchmark server
+*** Risultati
+*** Discussione sulla scalabilità
+**** Grafici, cpu-bound ecc...
+** Conclusioni e sviluppi futuri
+*** Autogestione finanziaria dell'hub
+*** Denominazione degli endpoint sulla base della valuta
+
