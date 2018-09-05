@@ -34,13 +34,8 @@ csl: template/transactions-on-computer-systems.csl
 	- Progettazione, sviluppo e prove sperimentali di Fulgur Hub
 
 # Background
-In questo capitolo si vuole fare una panoramica delle tecniche di scalabilità off-chain della blockchain. In sezione 1.1 vengono presentati la blockchain e gli smart contract. In sezione 1.2 si introducono gli state channel. In sezione 1.3 viene presentato il design di un inextinguishable payment channel, una particolare tipologia di state channel. Infine in sezione 1.3 viene introdotto Fulgur Hub, il design di un hub che permette di scambiare valore mediante l'uso di payment channel tra più di due entità.
-
 ## Blockchain e smart contract
-
 ## State channel
-Gli state channel permettono alle parti di modificare in modo sicuro porzioni della blockchain (e.g. uno smart contract). Queste modifiche avvengono mediante lo scambio di messaggi off-chain (e.g. una cartolina, un sms, una richiesta http). I messaggi scambiati descrivono un aggiornamento di stato, come l'aggiornamento del bilancio di una parte o la prossima mossa di un giocatore di tris. Uno state channel ha dunque due stati, quello on-chain e quello off-chain. Le operazioni che modificano lo stato on-chain vengono dette *operazioni on-chain*; quelle che modificano lo stato off-chain vengono dette *operazioni off-chain*.
-
 ## Inextinguishable payment channel
 ### Apertura di un payment channel
 ### Schema propose/accept
