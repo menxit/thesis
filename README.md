@@ -63,13 +63,6 @@ csl: template/transactions-on-computer-systems.csl
 
 # Progettazione
 ## Descrizione generale dell'architettura
-@startuml
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
-
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
-@enduml
 ### Lo smart contract
 ### Il client
 ### L'hub
