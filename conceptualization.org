@@ -1,43 +1,53 @@
 * FulgurHub: implementazione in TypeScript e misurazione di performance
 ** Introduzione
-- 2008 paper di Sathosi Nakamoto e pubblicazione protocollo BitCoin
-- Stato del network dieci anni dopo
-- Problemi di scalabilità
-- Soluzioni al problema della scalabilità
-	- Algoritmo di consenso
-	- Sharding
-	- OffChain
-- Lavoro di questa tesi
-  - Stato dell'arte
-	- Design e implementazione di un IPC
-	- Progettazione, sviluppo e prove sperimentali di Fulgur Hub
-- Descrizione capitoli
-  
+*** 2008 paper di Sathosi Nakamoto
+*** 2009 pubblicazione protocollo BitCoin
+*** Problemi di scalabilità
+**** Throughput teorico massimo di BitCoin
+**** Aumento costi delle fee
+*** Soluzioni al problema della scalabilità
+**** Algoritmo di consenso
+**** Sharding
+**** OffChain
+*** Lavoro di questa tesi
+**** Analisi dello stato dell'arte
+**** Design e implementazione di un IPC
+**** Progettazione, sviluppo e prove sperimentali di Fulgur Hub  
+*** Descrizione capitoli
 ** Background
-*** Blockchain, smart contract
-*** Soluzioni OffChain
+*** Blockchain
+**** Struttura dati autenticata
+***** 
+**** Permissionless vs Permissioned
+*** Smart contract
+*** Scalabilità OffChain
 **** State channel
 **** Payment channel
 ***** Apertura di un payment channel
+***** Join di un payment channel
 ***** Schema propose/accept
-***** Transazioni OffChain-OffChain
-**** IPC
+****** Proporre l'aggiornamento di un payment channel
+****** Accettare l'aggiornamento di un payment channel
+**** Inextinguishable payment channel
 ***** Schema detach/attach
-***** Hot withdraw
-***** Hot refill
-**** Chiusura di un payment channel
+****** Hot withdraw mediante detach OffChain e attach OnChain
+****** Hot refill
+**** Chiusura di un IPC
 *** Fulgur Hub
-**** Motivazioni
-***** Pagamenti ibridi
+**** Obiettivi
+***** Permettere pagamenti tra N entità
+***** Permettere pagamenti ibridi
+****** P
 ***** Trustless
 ***** Non censurabile
 ***** Anonimato
 ***** Autogestito
-**** Tipologie di transazioni
+*** Motivazioni
+**** 
+*** Tipologie di transazioni
 ***** Transazioni omogenee
 ***** Transazioni miste
 ***** Transazioni esterne
-
 ** Analisi
 *** Obiettivi
 **** Non autogestito
@@ -64,7 +74,6 @@
 **** A si rifiuta di regolare un trasferimento nei confronti dell'hub
 **** Tentativo di ritirare un pending token già usato
 **** Mancanza di cooperazione nel ricevere un pagamento
-
 ** Progettazione e implementazione
 *** Lo smartcontract EthereumSmartContract
 *** Client
@@ -77,7 +86,6 @@
 **** HubPublicCommands
 **** RedisHubDatabase
 **** HubMonitorService
-
 ** Prove e risultati sperimentali
 *** Cosa e perché
 **** Transazioni OffChain-OffChain seriali
@@ -90,4 +98,3 @@
 ** Conclusioni e sviluppi futuri
 *** Autogestione finanziaria dell'hub
 *** Denominazione degli endpoint sulla base della valuta
-
