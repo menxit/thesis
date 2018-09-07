@@ -1,4 +1,4 @@
-* FulgurHub: implementazione in TypeScript e misurazione di performance
+* Analisi, progettazione e prove sperimentali di un FulgurHub in TypeScript
 ** Introduzione
 *** 2008 paper di Sathosi Nakamoto
 *** 2009 pubblicazione protocollo BitCoin
@@ -12,89 +12,216 @@
 *** Lavoro di questa tesi
 **** Analisi dello stato dell'arte
 **** Design e implementazione di un IPC
-**** Progettazione, sviluppo e prove sperimentali di Fulgur Hub  
+**** Analisi, progettazione e sviluppo di un FulgurHub  
+**** Prove sperimentali di Fulgur Hub
 *** Descrizione capitoli
 ** Background
-*** Blockchain
-**** Struttura dati autenticata
-***** 
-**** Permissionless vs Permissioned
-*** Smart contract
+*** Distributed Ledger Technologies
+**** Il problema: transazioni in un sistema distribuito e trustless
+**** Il caso d'uso: scambio di asset
+***** La transazione: rappresentazione dello scambio di valore
+***** Il ledger: registro degli scambi avvenuti
+***** Meccanismo di consenso
+****** Problema del double spending
+****** Controllo della generazione di asset
+****** Condizioni di sblocco dei fondi
+**** Implementazione: blockchain, un esempio di DLT permissionless
+***** Struttura
+***** Proof of Work, l'algoritmo del consenso
+**** Aggiornamento di una DLT
+***** Spendere un UTXO
+***** Operazioni complesse basate su smart contract
 *** Scalabilità OffChain
 **** State channel
 **** Payment channel
-***** Apertura di un payment channel
-***** Join di un payment channel
+***** Architettura generale
+****** Smart contract
+****** Client
+***** Inizializzazione di payment channel
+****** Deploy dello smart contract
+****** Apertura di un payment channel
+****** Join di un payment channel
 ***** Schema propose/accept
-****** Proporre l'aggiornamento di un payment channel
-****** Accettare l'aggiornamento di un payment channel
+****** Gli endpoint
+******* Propose
+******* Accept
+****** Struttura di una propose
+******* Numero di sequenza
+******* Balance A
+******* Balance B
+******* Firma della propose
+***** Chiusura del payment channel in due fasi
+****** Richiesta di chiusura
+******* L'operazione ```close```
+****** Finalizzazione della chiusura
+******* Il tempo di grazia
+******* L'operazione ```withdraw```
 **** Inextinguishable payment channel
-***** Schema detach/attach
-****** Hot withdraw mediante detach OffChain e attach OnChain
-****** Hot refill
-**** Chiusura di un IPC
-*** Fulgur Hub
-**** Obiettivi
-***** Permettere pagamenti tra N entità
-***** Permettere pagamenti ibridi
-****** P
-***** Trustless
-***** Non censurabile
-***** Anonimato
-***** Autogestito
-*** Motivazioni
-**** 
-*** Tipologie di transazioni
-***** Transazioni omogenee
-***** Transazioni miste
-***** Transazioni esterne
+***** Estensione delle strutture dati
+****** Estensione della struttura di un propose
+******** Hash di un token
+******** Tipologia di operazione
+******** Tipologia di catena
+****** Struttura di un token
+******** Numero di sequenza
+******** Valore
+******** Scadenza
+******** Firma del token
+
+***** Schema attach/detach
+****** Prelievo a caldo
+******* Detach di un token OffChain
+******* Attach di un token OnChain
+****** Ricarica a caldo
+*** Obiettivi di Fulgur Hub
+**** Transazioni immediate
+**** Transazioni tra più di due entità
+**** Transazioni tra diversi hub
+**** Autogestito
+**** Non censurabile
+*** FulgurHub e stato dell'arte
+**** Lightning Network
+***** Topologia di rete a confronto e censura
+***** Superamento del problema di ricerca del percorso ottimo
+**** NOCUST
+***** Conferma di una transazione non immediata
 ** Analisi
 *** Obiettivi
-**** Non autogestito
-**** Cosa è stato implementato
+**** Dimostrazione di fattibilità
+***** Transazioni OffChain-OffChain
+***** Transazioni OnChain-OnChain
+***** Transazioni OffChain-OnChain
+***** Transazioni OnChain-OffChain
+***** Prelievi a caldo
+***** Ricariche a caldo
+**** Dimostrare la scalabilità architetturale
 *** Descrizione generale dell'architettura
 **** Lo smart contract
 **** Il client
 **** L'hub
-*** Apertura di un canale
-*** Pagamenti omogenei
-**** Transazioni OnChain-OnChain
-**** Transazioni OffChain-OffChain
-*** Pagamenti ibridi
-**** Transazioni OffChain-OnChain
-**** Transazioni OnChain-OffChain
-*** Riscossione di un pending token
-*** Chiusura di un canale
-*** Gestione dei fallimenti
-**** B non invia la ricevuta di pagamento ad A
-**** Generazione di una miriade di token
-**** L'hub non permette di attaccare un token
-**** L'hub non permette di staccare un token
-**** Tentativo di pagamento con un token scaduto
-**** A si rifiuta di regolare un trasferimento nei confronti dell'hub
-**** Tentativo di ritirare un pending token già usato
-**** Mancanza di cooperazione nel ricevere un pagamento
-** Progettazione e implementazione
-*** Lo smartcontract EthereumSmartContract
-*** Client
-**** ClientPrivateCommands
-**** ClientPublicCommand
-**** LevelDBClientDatabase
-**** ClientMonitorService
+*** Casi d'uso
+**** Apertura di un canale
+***** Pre condizioni
+***** Descrizione delle interazioni
+**** Pagamento OnChain-OnChain
+***** Pre condizioni
+***** Descrizione delle interazioni
+***** Gestione delle eccezioni
+****** Credito insufficiente del client OnChain
+**** Pagamento OffChain-OffChain
+***** Pre condizioni
+***** Descrizione delle interazioni
+***** Gestione delle eccezioni
+****** B non invia la ricevuta di pagamento ad A
+****** Generazione di una miriade di token
+****** L'hub non permette di attaccare un token
+****** L'hub non permette di staccare un token
+****** A si rifiuta di regolare un trasferimento nei confronti dell'hub
+****** Tentativo di pagamento con un token scaduto
+**** Pagamento OffChain-OnChain
+***** Pre condizioni
+***** Descrizione delle interazioni
+**** Pagamento OnChain-OffChain
+***** Pre condizioni
+***** Descrizione delle interazioni
+**** Prelievo a caldo
+***** Pre condizioni
+***** Descrizione delle interazioni
+**** Ricarica a caldo
+***** Pre condizioni
+***** Descrizione delle interazioni
+**** Chiusura di un canale
+***** Pre condizioni
+***** Descrizione delle interazioni
+**** Riscossione dei pending token
+***** Pre condizioni
+***** Descrizione delle interazioni
+***** Gestione delle eccezioni
+****** Tentativo di ritirare un pending token già usato
+*** Mancanza di cooperazione nel ricevere un pagamento
+** Progettazione e sviluppo
+*** Le motivazioni tecnologiche
+**** La blockchain: Ethereum
+***** Supporto degli smart contract
+***** Ambiente di sviluppo maturo
+****** Solidity
+****** Ganache
+****** Web3
+**** Il linguaggio di programmazione: TypeScript
+***** Supporto di web3
+***** Tipizzazione forte
+**** Il database lato server: Redis
+***** Throughput considerevole in scrittura
+***** Customizzazione delle qualità nei limiti del teorema CAP
+****** Consistenza
+****** Disponibilità
+****** Sharding
+**** Il database lato client: LevelDB
+*** Lo smart contract
+**** Implementazione in Solidity
+**** Interfaccia in TypeScript
+*** Il client
+**** RPC privata
+***** Join di un hub
+***** Trasferimento OnChain-OnChain
+***** Detach di un token OffChain-OffChain
+***** Detach di un token OnChain-OffChain
+***** Invio della PoD
+***** Redimere un pending token
+***** Attach di un token OnChain
+***** Regolazione di un pagamento OffChain
+***** Invio della ricevuta di pagamento
+**** Endpoint pubblici
+***** Ricezione di una PoD
+***** Ricezione di una ricevuta di pagamento
+**** Gestione degli eventi asincroni
+***** Il monitor
+***** Gli eventi
+****** Detach di un token OnChain
+****** Ricezione di una PoD
 *** Hub
-**** HubPrivateCommands
-**** HubPublicCommands
-**** RedisHubDatabase
-**** HubMonitorService
-** Prove e risultati sperimentali
-*** Cosa e perché
-**** Transazioni OffChain-OffChain seriali
-**** Transazioni OffChain-OffChain concorrenti
-*** Come
+**** Endpoint pubblici
+***** Ricezione di una propose
+***** Ricezione di una ricevuta di pagamento
+**** Gestione degli eventi asincroni
+***** Il monitor
+***** Gli eventi
+****** Join di un utente
+****** Chiusura di un canale
+****** Ritiro di un pending token
+** Prove sperimentali
+*** Gli obiettivi
+**** Verifica delle performance delle transazioni OffChain
+**** Verifica della scalabilità delle transazioni OffChain
+*** L'approccio adottato
 **** Benchmark server
-*** Risultati
+***** Deploy dell'ambiente di collaudo basato su Docker Swarm
+***** Esecuzione del benchmark
+****** Transazioni seriali
+****** Transazioni concorrenti
+****** Simulazione della latenza di rete
+*** Il throughput lato client
+**** Risultati
+***** Al variare della RAM
+****** Tabella
+****** Grafico
+***** Al variare della CPU
+****** Tabella
+****** Grafico
+**** Considerazioni
+Il collo di bottiglia è la rete
+*** Il throughput lato hub
+**** Risultati
+***** Al variare della RAM
+****** Tabella
+****** Grafico
+***** Al variare della CPU
+****** Tabella
+**** Considerazioni
+Il collo di bottiglia è la rete
 *** Discussione sulla scalabilità
-**** Grafici, cpu-bound ecc...
+**** Replicare l'hub
+**** Replicare redis
 ** Conclusioni e sviluppi futuri
 *** Autogestione finanziaria dell'hub
 *** Denominazione degli endpoint sulla base della valuta
