@@ -1,6 +1,6 @@
 * Analisi, progettazione e prove sperimentali di un FulgurHub in TypeScript
 ** Introduzione
-*** 2008 paper di Sathosi Nakamoto
+*** 2008 pubblicazione paper di Sathosi Nakamoto
 *** 2009 pubblicazione protocollo BitCoin
 *** Problemi di scalabilità
 **** Throughput teorico massimo di BitCoin
@@ -10,37 +10,35 @@
 **** Sharding
 **** OffChain
 *** Lavoro di questa tesi
-**** Analisi dello stato dell'arte
+**** Analisi dello stato dell'arte relativa a soluzioni di scalabilità OffChain
 **** Design e implementazione di un IPC
 **** Analisi, progettazione e sviluppo di un FulgurHub  
 **** Prove sperimentali di Fulgur Hub
 *** Descrizione capitoli
 ** Background
 *** Distributed Ledger Technologies
-**** Il problema: transazioni in un sistema distribuito e trustless
-**** Il caso d'uso: scambio di asset
-***** La transazione: rappresentazione dello scambio di valore
-***** Il ledger: registro degli scambi avvenuti
-***** Meccanismo di consenso
+**** Il problema che risolvono le DLT
+***** Transazioni trustless in un sistema distribuito
+***** DLT permissionless vs DLT permissioned
+**** Caso d'uso: scambio di asset
+***** La transazione, rappresentazione dello scambio di valore
+***** Il ledger, registro pubblico degli scambi di valore
+**** Blockchain e smart contract
+***** Meccanismo di consenso e Proof of Work
+****** Descrizione generale della PoW
 ****** Problema del double spending
 ****** Controllo della generazione di asset
-****** Condizioni di sblocco dei fondi
-**** Implementazione: blockchain, un esempio di DLT permissionless
-***** Struttura
-***** Proof of Work, l'algoritmo del consenso
-**** Aggiornamento di una DLT
-***** Spendere un UTXO
-***** Operazioni complesse basate su smart contract
+***** Aggiornare lo stato della blockchain con operazioni complesse basate su smart contract
 *** Scalabilità OffChain
 **** State channel
 **** Payment channel
 ***** Architettura generale
-****** Smart contract
-****** Client
-***** Inizializzazione di payment channel
-****** Deploy dello smart contract
-****** Apertura di un payment channel
-****** Join di un payment channel
+****** 1 smart contract
+****** 2 server
+***** Inizializzazione
+****** Deploy
+****** Apertura
+****** Join
 ***** Schema propose/accept
 ****** Gli endpoint
 ******* Propose
@@ -50,29 +48,26 @@
 ******* Balance A
 ******* Balance B
 ******* Firma della propose
-***** Chiusura del payment channel in due fasi
+***** Chiusura in due fasi
 ****** Richiesta di chiusura
 ******* L'operazione ```close```
 ****** Finalizzazione della chiusura
 ******* Il tempo di grazia
 ******* L'operazione ```withdraw```
 **** Inextinguishable payment channel
-***** Estensione delle strutture dati
-****** Estensione della struttura di un propose
-******** Hash di un token
-******** Tipologia di operazione
-******** Tipologia di catena
-****** Struttura di un token
-******** Numero di sequenza
-******** Valore
-******** Scadenza
-******** Firma del token
-
+***** Estensione delle struttura dati di una propose
+******* Hash di un token
+******* Tipologia di operazione
+******* Tipologia di catena
+***** Struttura di un token
+******* Numero di sequenza
+******* Valore
+******* Scadenza
+******* Firma del token
 ***** Schema attach/detach
-****** Prelievo a caldo
-******* Detach di un token OffChain
-******* Attach di un token OnChain
-****** Ricarica a caldo
+****** Detach di un token OffChain
+****** Attach di un token OnChain
+***** Ricarica a caldo
 *** Obiettivi di Fulgur Hub
 **** Transazioni immediate
 **** Transazioni tra più di due entità
@@ -118,6 +113,7 @@
 ****** L'hub non permette di staccare un token
 ****** A si rifiuta di regolare un trasferimento nei confronti dell'hub
 ****** Tentativo di pagamento con un token scaduto
+****** Mancanza di cooperazione nel ricevere un pagamento
 **** Pagamento OffChain-OnChain
 ***** Pre condizioni
 ***** Descrizione delle interazioni
@@ -138,7 +134,6 @@
 ***** Descrizione delle interazioni
 ***** Gestione delle eccezioni
 ****** Tentativo di ritirare un pending token già usato
-*** Mancanza di cooperazione nel ricevere un pagamento
 ** Progettazione e sviluppo
 *** Le motivazioni tecnologiche
 **** La blockchain: Ethereum
@@ -208,8 +203,6 @@
 ***** Al variare della CPU
 ****** Tabella
 ****** Grafico
-**** Considerazioni
-Il collo di bottiglia è la rete
 *** Il throughput lato hub
 **** Risultati
 ***** Al variare della RAM
@@ -217,9 +210,8 @@ Il collo di bottiglia è la rete
 ****** Grafico
 ***** Al variare della CPU
 ****** Tabella
-**** Considerazioni
-Il collo di bottiglia è la rete
-*** Discussione sulla scalabilità
+*** Considerazioni sulle performance
+*** Considerazioni sulla scalabilità
 **** Replicare l'hub
 **** Replicare redis
 ** Conclusioni e sviluppi futuri
