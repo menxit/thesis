@@ -2,6 +2,9 @@
 ** Introduzione
 *** 2008 pubblicazione paper di Sathosi Nakamoto
 *** 2009 pubblicazione protocollo BitCoin
+*** Caratteristiche del protocollo
+**** Caratteristiche trustless
+**** Sistema permissionless
 *** Problemi di scalabilità
 **** Throughput teorico massimo di BitCoin
 **** Aumento costi delle fee
@@ -16,21 +19,20 @@
 **** Prove sperimentali di Fulgur Hub
 *** Descrizione capitoli
 ** Background
-*** Distributed Ledger Technologies
-**** Il problema che risolvono le DLT
+*** Blockchain
+**** Il problema
 ***** Transazioni trustless in un sistema distribuito
-***** DLT permissionless vs DLT permissioned
-**** Caso d'uso: scambio di asset
-***** La transazione, rappresentazione dello scambio di valore
-***** Il ledger, registro pubblico degli scambi di valore
+***** Problema del double spending
+**** Caso d'uso: invio e ricezione di pagamenti
+***** La transazione
+***** Il ledger
 **** Blockchain e smart contract
 ***** Meccanismo di consenso e Proof of Work
 ****** Descrizione generale della PoW
-****** Problema del double spending
-****** Controllo della generazione di asset
+****** Controllo della coinbase
 ***** Aggiornare lo stato della blockchain con operazioni complesse basate su smart contract
-*** Scalabilità OffChain
-**** State channel
+**** Scalabilità OffChain
+*** State channel
 **** Payment channel
 ***** Architettura generale
 ****** 1 smart contract
@@ -40,9 +42,8 @@
 ****** Apertura
 ****** Join
 ***** Schema propose/accept
-****** Gli endpoint
-******* Propose
-******* Accept
+****** Descrizione generale
+****** Endpoint
 ****** Struttura di una propose
 ******* Numero di sequenza
 ******* Balance A
@@ -52,9 +53,10 @@
 ****** Richiesta di chiusura
 ******* L'operazione ```close```
 ****** Finalizzazione della chiusura
-******* Il tempo di grazia
+******* Il grace period
 ******* L'operazione ```withdraw```
 **** Inextinguishable payment channel
+***** Motivazioni
 ***** Estensione delle struttura dati di una propose
 ******* Hash di un token
 ******* Tipologia di operazione
@@ -68,18 +70,20 @@
 ****** Detach di un token OffChain
 ****** Attach di un token OnChain
 ***** Ricarica a caldo
-*** Obiettivi di Fulgur Hub
-**** Transazioni immediate
-**** Transazioni tra più di due entità
-**** Transazioni tra diversi hub
-**** Autogestito
-**** Non censurabile
-*** FulgurHub e stato dell'arte
-**** Lightning Network
-***** Topologia di rete a confronto e censura
-***** Superamento del problema di ricerca del percorso ottimo
-**** NOCUST
-***** Conferma di una transazione non immediata
+*** Fulgur Hub
+**** Obiettivi
+***** Transazioni immediate
+***** Transazioni tra più di due entità
+***** Transazioni tra diversi hub
+***** Autogestito
+***** Non censurabile
+**** Lavori correlati
+***** Lightning Network
+****** Topologia di rete a confronto e censura
+Si predilige un hub ben interconnesso (+passaggi+fee)
+****** Superamento del problema di ricerca del percorso ottimo
+***** NOCUST
+****** Conferma di una transazione non immediata
 ** Analisi
 *** Obiettivi
 **** Dimostrazione di fattibilità
@@ -142,6 +146,8 @@
 ****** Solidity
 ****** Ganache
 ****** Web3
+***** Altre soluzioni
+tesoz ecc..
 **** Il linguaggio di programmazione: TypeScript
 ***** Supporto di web3
 ***** Tipizzazione forte
@@ -157,6 +163,7 @@
 **** Interfaccia in TypeScript
 *** Il client
 **** RPC privata
+tabella riassuntiva degli endpoint
 ***** Join di un hub
 ***** Trasferimento OnChain-OnChain
 ***** Detach di un token OffChain-OffChain
@@ -187,7 +194,7 @@
 ** Prove sperimentali
 *** Gli obiettivi
 **** Verifica delle performance delle transazioni OffChain
-**** Verifica della scalabilità delle transazioni OffChain
+**** Verifica della scalabilità dell'hub
 *** L'approccio adottato
 **** Benchmark server
 ***** Deploy dell'ambiente di collaudo basato su Docker Swarm
@@ -216,4 +223,4 @@
 **** Replicare redis
 ** Conclusioni e sviluppi futuri
 *** Autogestione finanziaria dell'hub
-*** Denominazione degli endpoint sulla base della valuta
+*** Endpoint denominati in maniera diversa
