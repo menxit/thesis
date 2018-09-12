@@ -155,8 +155,8 @@ Anche la struttura dati relativa a una propose viene estesa; questi sono i nuovi
 
 | Campo           | Descrizione              |
 |-----------------+--------------------------|
-| hash_token      | L'hash relativo al token |
-| type_of_propose | attach/detach            |
+| hash token      | L'hash relativo al token |
+| type of propose | attach/detach            |
 
 **Ritiro a caldo** Alice vuole ritirare a caldo 0.5 eth; effettua il detach off-chain di un token; invia a Berto una propose contenente un token di 0.5 eth che scala da balance_a. Berto risponde con propose e token firmati. Il token firmato rappresenta la PoD (Proof of Detachment). Alice effettua l'attach in catena della PoD e ritira a caldo 0.5 eth.
 
@@ -165,7 +165,6 @@ Anche la struttura dati relativa a una propose viene estesa; questi sono i nuovi
 
 
 **Double spending di un token** Quando Alice ritira a caldo presentando un token, lo smart contract associa una PoA (Proof of Attachment) relativa al numero di sequenza del token corrente. Questo permette allo smart contract di non accettare token già spesi.
-
 
 ** Fulgur Hub
 Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la scalabilità off-chain, essi sono degli strumenti rudimentali e con una esperienza utente limitata. Non è infatti pensabile dover inizializzare un canale di pagamento con ciascun individuo con cui si voglia instaurare un rapporto economico. Fulgur Hub nasce dalla necessità di migliorare l'esperienza utente degli IPC e di potenziare alcune delle loro caratteristiche.
