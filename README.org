@@ -21,97 +21,178 @@
 #+PANDOC_OPTIONS: csl:template/transactions-on-computer-systems.csl
 #+PANDOC_OPTIONS: filter:pandoc-citeproc
 #+PANDOC_OPTIONS: template:./template/template.latex
+#+PANDOC_OPTIONS: wrap:preserve
 
 * Introduzione
-** 2008 pubblicazione paper di Sathosi Nakamoto
-#+begin_src plantuml :file schema-uml.png
-  Alice -> Bob: synchronous call!
-  Alice ->> Bob: asynchronous call YHEA!
-#+end_src
-#+CAPTION: Uno schema UML realizzato con plantuml
-    #+RESULTS:
-    [[file:schema-uml.png]]
+*2008 whitepaper Bitcoin* Nel 2008 viene pubblicato il whitepaper di Bitcoin, una proposta di soluzione al problema della doppia spesa basata sull'utilizzo di una rete peer-to-peer [@nakamoto2008bitcoin].
 
-** 2009 pubblicazione protocollo BitCoin
-Prova [@poon2016bitcoin] test
-** Problemi di scalabilità
-*** Throughput teorico massimo di BitCoin
-*** Aumento costi delle fee
-** Soluzioni al problema della scalabilità
-*** Algoritmo di consenso
-*** Sharding
-*** OffChain
-** Lavoro di questa tesi
-*** Analisi dello stato dell'arte relativa a soluzioni di scalabilità OffChain
-*** Design e implementazione di un IPC
-*** Analisi, progettazione e sviluppo di un FulgurHub  
-*** Prove sperimentali di Fulgur Hub
-** Descrizione capitoli
+**2009 pubblicazione protocollo** Il 2009 vede la nascita della prima cryptovaluta, bitcoin, con la pubblicazione
+dell'implementazione del protocollo Bitcoin. Gli standard variano, ma sembra
+essersi formato un consenso nel riferirsi con Bitcoin maiuscolo al
+protocollo e con bitcoin minuscolo alla moneta in se [@TheBitco9].
+
+**Bitcoin 10 anni dopo** Negli anni successivi decine di protocolli alternativi a Bitcoin sono fioriti. Le cryptovalute da argomento di nicchia hanno visto una costante crescita di adozione. Dal 2009 fino a oggi il numero di transazioni quotidiane è cresciuto più che linearmente, raggiungendo il suo attuale picco storico nel dicembre del 2017, con più di 450K transazioni in un giorno [@BlockchainStats].
+
+**Limiti architetturali** Questo crescente interesse nei confronti delle cryptovalute si scontra però con i limiti architetturali relativi alla scalabilità della blockchain. Con gli attuali parametri di blocksize e blockinterval (1 megabyte e 10 minuti), il throughput massimo è compreso tra le 3 e le 7 tps (transazioni per secondo). Portando questi due parametri all'estremo, 1 megabyte e 1 minuto, si riuscirebbe a decuplicare il throughput, senza sacrificare il protocollo in termini di sicurezza [@gervais2016security]. Sebbene 30 - 70 tps rappresenterebbero un fondamentale miglioramento tecnologico di Bitcoin, il throughput raggiunto non sarebbe comunque confrontabile con quello di sistemi centralizzati analoghi come il circuito VISA, con le sue 56K tps [@VISA].
+
+
+**Soluzioni** Diverse sono le soluzioni proposte per risolvere i problemi di scalabilità della blockchain e possono essere suddivise in tre categorie:
+- *Algoritmo di consenso* Alla base del whitepaper di Satoshi Nakamoto c'è il Proof Of Work. Modificando il meccanismo alla base della ricerca del consenso è possibile migliorare la scalabilità della blockchain. Ad oggi diverse sono le alternative proposte [@king2012ppcoin], [@bentov2016cryptocurrencies], [@kwon2014tendermint].
+- *Sharding* Questo concetto non è nuovo nel mondo dei database. L'idea è quella di suddividere la blockchain in più parti. La ricerca del consenso avviene in ciascuno di queste parti. Anche da questo punto di vista diversi sono i lavori e le proposte [@luu2016secure], [@AProofof65].
+- *Off-chain* Layers è un famoso pattern architetturale. Un forte impiego di questo pattern è stato fatto nell'ambito del networking, vedi pila ISO/OSI. La scalabilità off-chain si realizza costruendo un secondo layer sopra alla blockchain, che permetta di ereditare le sue caratteristiche (sicurezza e distribuzione), aggiungendone delle altre, come la scalabilità.
+
+
+Questi tre diversi approcci alla scalabilità della blockchain non sono in contrasto l'uno con l'altro, ma anzi possono essere applicati assieme in maniera sinergica. Nel lavoro di questa tesi ho approfondito l'ultima categoria, la scalabilità off-chain. In particolare mi sono occupato delle seguenti attività:
+- Analisi dello stato dell’arte relativa a soluzioni di scalabilità off-chain
+- Realizzazione di un canale di pagamento inestinguibile (IPC)
+- Analisi, progettazione e sviluppo di FulgurHub
+- Prove sperimentali di FulgurHub
+
+
+In questa tesi il capitolo due tratta il background necessario, in particolare si approfondisce il design di un payment channel e si introduce l'architettura di FulgurHub. Nel terzo capitolo si effettua l'analisi nel dettaglio di FulgurHub. Nel quarto capitolo si descrivono le fasi di progettazione e sviluppo di FulgurHub. Nel quinto capitolo si mostrano le prove sperimentali relative a quanto è stato implementato e si discutono i risultati in termini di performance e scalabilità.
+
 * Background
-** Distributed Ledger Technologies
-*** Il problema che risolvono le DLT
-**** Transazioni trustless in un sistema distribuito
-**** DLT permissionless vs DLT permissioned
-*** Caso d'uso: scambio di asset
-**** La transazione, rappresentazione dello scambio di valore
-**** Il ledger, registro pubblico degli scambi di valore
-*** Blockchain e smart contract
-**** Meccanismo di consenso e Proof of Work
-***** Descrizione generale della PoW
-***** Problema del double spending
-***** Controllo della generazione di asset
-**** Aggiornare lo stato della blockchain con operazioni complesse basate su smart contract
-** Scalabilità OffChain
-*** State channel
+** Blockchain
+**Il problema** La blockchain risolve il problema del double spending in un sistema peer-to-peer completamente decentralizzato [@nakamoto2008bitcoin]. Questo permette di memorizzare in maniera immutabile dei pagamenti in un registro pubblico, avendo la certezza che nessuno possa spendere più volte lo stesso token.
+
+**Il caso d'uso** Il caso d'uso tipico della blockchain è l'invio e la ricezione di pagamenti. La transazione rappresenta un pagamento. Essa può essere immaginata come un arco che unisce due nodi. Il nodo iniziale rappresenta il pagante, il nodo finale il pagato. Tutte queste transazioni vengono memorizzate su un registro pubblico detto ledger. Sebbene le transazioni siano pubbliche, esse vengono descritte anche come pseudoanonime, in quanto pubblico è solo l'indirizzo di paganti e pagati ma non il loro nominativo.
+
+**Cos'è la blockchain** La blockchain è una lista concatenata di blocchi. Ciascun blocco contiene: l'hash del precedente blocco, il merkle root relativo alla lista di transazioni associate al blocco corrente e un nonce. In Bitcoin un nuovo blocco viene aggiunto ogni dieci minuti e il merkle root rappresenta una prova succinta di una lista di transazioni di dimensione minore o uguale a 1 megabyte.
+
+**Come funziona la PoW** I blocchi vengono aggiunti dai miner. I miner sono sono dei nodi della rete che si occupano di trovare un nonce cha faccia si che l'hash del blocco corrente abbia un numero $D$ di zeri iniziali. Questo valore $D$ rappresenta la difficoltà corrente di mining della rete. La difficoltà è autoregolata dal protocollo e aumenta o diminuisce a seconda del tempo necessario per minare i precedenti blocchi. Un miner che riesce a presentare un nonce e un blocco valido ottiene in cambio le fee delle singole transazioni e una coinbase.
+
+**Cos'è uno smart contract** Inviare un pagamento in Bitcoin significa sbloccare uno o più UTXO (Unspent Transaction Output). Sbloccare un UTXO significa presentare una prova crittografica della proprietà di un certo token. La verifica della prova crittografica viene effettuata da tutti i nodi della rete eseguendo un ASFND (automa a stati finiti non deterministico). Il protocollo Bitcoin permette di implementare e deployare sulla rete degli automi anche più complessi. Script è il linguaggio di programmazione stack-based non Turing-completo che permette di descrivere questi automi in Bitcoin. Quando la complessità degli automi aumenta, si parla di smart contract, ovvero di contratti che permettono lo sblocco di fondi previa verifica di un insieme complesso di regole.
+
+**Smart contract Turing-completi** Sebbene abbia senso parlare di smart contract in Bitcoin, l'uso di questo termine in questo contesto è stato introdotto solo nel 2014, con la pubblicazione del whitepaper di Ethereum [@buterin2014next]. Ethereum è un protocollo che eredita gran parte delle caratteristiche di Bitcoin e in più introduce la EVM (Ethereum Virtual Machine) la macchina virtuale che esegue gli smart contract. Gli smart contract in Ethereum vengono descritti in Solidity, un linguaggio di programmazione C-like Turing-completo. La turing completezza permette di descrivere un più ampio spettro di regole.
+
+**Scalabilità off-chain** Nel Capitolo 1 sono stati introdotti i limiti architetturali della blockchain e le tre categorie di approcci risolutivi. La scalabilità off-chain è una delle tipologie di soluzioni atta a superare i limiti di scalabilità della blockchain. Questo approccio riduce sensibilmente le interazioni necessarie sulla blockchain, spostandole fuori di essa, senza compromettere le proprietà di sicurezza. 
+
+** State channel
+Gli state channel permettono a due parti di modificare in maniera sicura porzioni della blockchain, dette depositi di stato. Questi depositi di stato sono memorizzati all'interno di indirizzi multisignature. Le parti modificano lo stato dello state channel scambiando messaggi off-chain. Questi messaggi descrivono un aggiornamento dello stato, per esempio la prossima mossa in una partita di tris.
+
 *** Payment channel
-**** Architettura generale
-***** 1 smart contract
-***** 2 server
-**** Inizializzazione
-***** Deploy
-***** Apertura
-***** Join
-**** Schema propose/accept
-***** Gli endpoint
-****** Propose
-****** Accept
-***** Struttura di una propose
-****** Numero di sequenza
-****** Balance A
-****** Balance B
-****** Firma della propose
-**** Chiusura in due fasi
-***** Richiesta di chiusura
-****** L'operazione ```close```
-***** Finalizzazione della chiusura
-****** Il tempo di grazia
-****** L'operazione ```withdraw```
+Un payment channel è una particolare tipologia di state channel. I messaggi scambiati off-chain rappresentano dei pagamenti, ovvero l'aggiornamento del bilancio delle parti. Instaurare un payment channel richiede una singola operazione on-chain da ciascuna parte. L'operazione on-chain viene eseguita su uno smart contract dedicato al singolo payment channel. Questo singolo requisito garantisce di poter effettuare un numero illimitato di pagamenti off-chain, nei limiti del balance iniziale delle parti. I messaggi off-chain possono essere scambiati mediante qualunque mezzo, comunemente una connessione http. Un payment channel permette dunque di spostare i problemi di scalabilità dalla blockchain a un server http, ma la letteratura riguardo a come far scalare quest'ultimo è consolidata.
+
+
+**Architettura** Un payment channel permette di effettuare un numero illimitato di transazioni off-chain tra due parti. Ciascuna parte deve mettere a disposizione un server http che permetta l'invio e la ricezione di pagamenti. Una delle due parti deploya lo smart contract e apre il canale. In un secondo momento la controparte effettua il join del canale, stabilendone la definitiva apertura. In questa progettazione si è presa in considerazione la blockchain di Ethereum.
+
+
+**Deploy** Il deploy è la prima fase di inizializzazione. Alice deploya lo smart contract del relativo canale. L'operazione di deployment è richiesta per ciascun singolo payment channel. Questa fase permette di ottenere l'indirizzo di un contratto, che nelle successive fasi verrà adottato per richiamare le operazioni on-chain che si intende richiamare. In questa fase lo stato del payment channel è detta $INIT$.
+
+#+begin_src plantuml :file deploy_payment_channel.png
+skinparam dpi 300
+Alice -> (Smart contract [INIT]): Deploy
+:Berto:
+#+end_src
+
+#+CAPTION: Deploy on-chain dello smart contract di un payment channel.
+#+ATTR_HTML: :width 60% :placement [!htb]
+#+RESULTS:
+[[file:deploy_payment_channel.png]]
+
+**Apertura** Alice apre il canale. Alice apre il canale e blocca un quantitativo arbitrario di fondi all’interno dello smart contract. Questi fondi rappresentano il bilancio iniziale di Alice. Si fa notare come la fase di deploy e di apertura possano essere svolte con un'unica operazione on-chain. Oltre a depositare i fondi, Alice con questa operazione porta in catena il suo indirizzo ip e l'indirizzo ethereum di Berto. Terminata la procedura lo stato del canale diventa $OPENED$.
+
+#+begin_src plantuml :file apertura_payment_channel.png
+skinparam dpi 300
+Alice -> (Smart contract [OPENED]): Apertura e deposito fondi
+:Berto:
+#+end_src
+
+#+CAPTION: Apertura e deposito fondi on-chain in un payment channel.
+#+ATTR_HTML: :width 70% :placement [!htb]
+#+RESULTS:
+[[file:apertura_payment_channel.png]]
+
+
+**Join** In un secondo momento Berto effettua il join del canale di pagamento aperto da Alice. Anche questa operazione viene effettuata on-chain. Berto deposita i fondi che corrisponderanno al suo bilancio iniziale e porta in catena il proprio indirizzo ip. Con questa operazione il canale è definitivamente stabilito e lo stato passa da $OPENED$ a $ESTABLISHED$.
+
+#+begin_src plantuml :file join_payment_channel.png
+skinparam dpi 300
+Alice -> (Smart contract [ESTABLISHED])
+Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
+#+end_src
+
+#+CAPTION: Join e deposito fondi on-chain in un payment channel.
+#+ATTR_HTML: :width 45% :placement [!htb]
+#+RESULTS:
+[[file:join_payment_channel.png]]
+
+**Schema propose/accept** I pagamenti off-chain avvengono mediante lo schema propose/accept. Alice (o Berto) propone un aggiornamento dello stato del canale firmando questa proposta con la propria chiave privata. Berto riceve la proposta, ne verifica la validità ed eventualmente l'accetta inviando la proposta controfirmata ad Alice. Il pagamento è avvenuto, senza la necessità di ulteriori tempi di attesa o conferme. 
+
+
+**Gli endpoint pubblici** Ciascuna controparte di un payment channel mette a disposizione un server http. Gli endpoint pubblici sono detti /propose e /accept. L'endpoint /propose permette di ricevere una proposta di aggiornamento di bilancio. L'endpoint /accept permette di ricevere una proposta precedentemente inviata, controfirmata. La struttura di una propose è illustrata nella tabella seguente.
+
+| Campo     | Descrizione                                        |
+|-----------+----------------------------------------------------|
+| seq       | Il numero di sequenza                              |
+| balance_a | Il balance di chi ha aperto il canale              |
+| balance_b | Il balance di chi ha effettuato il join del canale |
+| sign      | La firma della propose                             |
+
+
+**Richiesta di chiusura** Chiudere un canale significa aggiornare il balance on-chain delle parti in modo tale che corrisponda a quello dell'ultima propose comunemente accordata. La prima fase di questo processo è detta richiesta di chiusura. In particolare si porta in catena l'ultima propose comunemente firmata. In questo modo lo stato del canale passa da $ESTABLISHED$ a $CLOSED$. La richiesta di chiusura può essere effettuata da Alice o da Berto.
+
+**Finalizzazione della chiusura** L'operazione di finalizzazione della chiusura viene effettuata da tutte e due le parti. Essa corrisponde al ritiro on-chain dei rispettivi fondi. Questa operazione può essere effettuata solo quando è passato un certo tempo dalla richiesta di chiusura. Il tempo che occorre attendere per finalizzare la chiusura è detto grace period.
+
+**Discutere una propose** Alice (o Berto) potrebbe non comportarsi correttamente, portando in chiusura una propose diversa dalla più recente. In questo caso Berto può discutere la propose durante il grace period. Discutere una propose significa portare in catena una propose firmata da Alice con numero di sequenza maggiore. Nel caso in cui la discussione abbia successo, Alice viene punita; la punizione consiste nel trasferimento di tutti i suoi fondi a Berto.
+
+
+**Il problema della free-option** Quando Alice invia una propose a Berto senza ricevere la controfirma, Berto ha il vantaggio di poter scegliere di chiudere il canale con due propose, l'ultima e la penultima. Inviare una propose coincide con inviare un pagamento, quindi sebbene Berto possa decidere di presentare in catena la penultima propose, questa descriverà uno stato per lui più svantaggioso.
+
 *** Inextinguishable payment channel
-**** Estensione delle struttura dati di una propose
-****** Hash di un token
-****** Tipologia di operazione
-****** Tipologia di catena
-**** Struttura di un token
-****** Numero di sequenza
-****** Valore
-****** Scadenza
-****** Firma del token
-**** Schema attach/detach
-***** Detach di un token OffChain
-***** Attach di un token OnChain
-**** Ricarica a caldo
-** Obiettivi di Fulgur Hub
-*** Transazioni immediate
-*** Transazioni tra più di due entità
-*** Transazioni tra diversi hub
-*** Autogestito
-*** Non censurabile
-** FulgurHub e stato dell'arte
-*** Lightning Network
-**** Topologia di rete a confronto e censura
-**** Superamento del problema di ricerca del percorso ottimo
-*** NOCUST
-**** Conferma di una transazione non immediata
+I payment channel permettono di trasferire un volume di coin limitato. Il valore trasferibile è fissato alla somma del balance di Alice e di Berto. Spesso questi canali sono sbilanciati, ovvero una delle due controparti effettua più pagamenti dell'altra. Un canale sbilanciato nel tempo prosciuga il balance di una delle due parti, rendendo il payment channel inutilizzabile. L'unica soluzione consiste nel chiudere il payment channel corrente e aprirne un nuovo, caricando nuovi fondi. Questa soluzione richiede delle operazioni on-chain onerose (deploy, apertura e join). Gli IPC (inextinguishable payment channel) superano questo problema, proponendo dei canali di pagamento che permettono di caricare e scaricare a caldo il balance.
+
+
+**Schema attach/detach** Descrizione di questo schema.
+
+
+**Estensione della propose** La struttura dati relativa a una propose viene
+estesa, in particolare vengono aggiunti i sequenti campi:
+| Campo         | Descrizione                                                  |
+|---------------+--------------------------------------------------------------|
+| hash_token    | L'hash relativo al token                                     |
+| typeOfPropose | Il tipo di operazione che si sta effettuando (attach/detach) |
+| typeOfChain   | Il tipo di catena di riferimento (OnChain/OffChain)          |
+
+
+**Struttura di un token** Un token ha la seguente struttura
+| Campo      | Descrizione                  |
+|------------+------------------------------|
+| seq        | Numero di sequenza del token |
+| value      | Valore del token             |
+| expiration | Tempo di vita di un token    |
+| sign       | Firma del token              |
+
+
+**Ritiro a caldo** Effettua il ritiro a caldo effettuando prima il detach di un
+  token OffChain e poi l'attach di un token OnChain.
+
+**Ricarica a caldo** Senza schema attach/detach.
+
+** Fulgur Hub
+Le motivazioni di Fulgur.
+*** Obiettivi
+**Transazioni immediate** Bitcoin ci mette un'ora, noi le vogliamo immediate.
+
+
+**Transazioni tra più di due entità** Payment channel solo due, noi ne vogliamo
+N.
+
+
+**Transazioni intra hub** Il sistema funziona anche con più di un hub.
+
+
+**Autogestito** Non serve stare davanti al computer.
+
+
+**Non censurabile** bla bla bla
+*** Lavori correlati
+**Lightning Network** Descrizione della topologia di rete a confronto e censura.
+  Si predilige un hub ben interconnesso (+passaggi=+fee). Superamento del
+  problema di ricerca del percorso ottimo.
+
+
+**NOCUST** Conferma di una transazione non immediata.
 * Analisi
 ** Obiettivi
 *** Dimostrazione di fattibilità
@@ -130,6 +211,13 @@ Prova [@poon2016bitcoin] test
 *** Apertura di un canale
 **** Pre condizioni
 **** Descrizione delle interazioni
+#+begin_src plantuml :file uml.png
+alice -> berto
+#+end_src
+#+CAPTION: UML
+#+RESULTS:
+[[file:uml.png]]
+
 *** Pagamento OnChain-OnChain
 **** Pre condizioni
 **** Descrizione delle interazioni
@@ -174,6 +262,8 @@ Prova [@poon2016bitcoin] test
 ***** Solidity
 ***** Ganache
 ***** Web3
+**** Altre soluzioni
+tesoz ecc..
 *** Il linguaggio di programmazione: TypeScript
 **** Supporto di web3
 **** Tipizzazione forte
@@ -189,6 +279,7 @@ Prova [@poon2016bitcoin] test
 *** Interfaccia in TypeScript
 ** Il client
 *** RPC privata
+tabella riassuntiva degli endpoint
 **** Join di un hub
 **** Trasferimento OnChain-OnChain
 **** Detach di un token OffChain-OffChain
@@ -219,7 +310,7 @@ Prova [@poon2016bitcoin] test
 * Prove sperimentali
 ** Gli obiettivi
 *** Verifica delle performance delle transazioni OffChain
-*** Verifica della scalabilità delle transazioni OffChain
+*** Verifica della scalabilità dell'hub
 ** L'approccio adottato
 *** Benchmark server
 **** Deploy dell'ambiente di collaudo basato su Docker Swarm
@@ -246,7 +337,6 @@ Prova [@poon2016bitcoin] test
 ** Considerazioni sulla scalabilità
 *** Replicare l'hub
 *** Replicare redis
-
 * Conclusioni e sviluppi futuri
 ** Autogestione finanziaria dell'hub
-** Denominazione degli endpoint sulla base della valuta
+** Endpoint denominati in maniera diversa
