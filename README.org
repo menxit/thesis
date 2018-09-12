@@ -59,7 +59,7 @@ In questa tesi il capitolo due tratta il background necessario, in particolare s
 
 **Cos'è la blockchain** La blockchain è una lista concatenata di blocchi. Ciascun blocco contiene: l'hash del precedente blocco, il merkle root relativo alla lista di transazioni associate al blocco corrente e un nonce. In Bitcoin un nuovo blocco viene aggiunto ogni dieci minuti e il merkle root rappresenta una prova succinta di una lista di transazioni di dimensione minore o uguale a 1 megabyte.
 
-**Come funziona la PoW** I blocchi vengono aggiunti dai miner. I miner sono sono dei nodi della rete che si occupano di trovare un nonce cha faccia si che l'hash del blocco corrente abbia un numero $D$ di zeri iniziali. Questo valore $D$ rappresenta la difficoltà corrente di mining della rete. La difficoltà è autoregolata dal protocollo e aumenta o diminuisce a seconda del tempo necessario per minare i precedenti blocchi. Un miner che riesce a presentare un nonce e un blocco valido ottiene in cambio le fee delle singole transazioni e una coinbase.
+**Come funziona la PoW** I blocchi vengono aggiunti dai miner. I miner sono dei nodi della rete che si occupano di trovare un nonce cha faccia si che l'hash del blocco corrente abbia un numero $D$ di zeri iniziali. Questo valore $D$ rappresenta la difficoltà corrente di mining della rete. La difficoltà è autoregolata dal protocollo e aumenta o diminuisce a seconda del tempo necessario per minare i precedenti blocchi. Un miner che riesce a presentare un nonce e un blocco valido ottiene in cambio le fee delle singole transazioni e una coinbase.
 
 **Cos'è uno smart contract** Inviare un pagamento in Bitcoin significa sbloccare uno o più UTXO (Unspent Transaction Output). Sbloccare un UTXO significa presentare una prova crittografica della proprietà di un certo token. La verifica della prova crittografica viene effettuata da tutti i nodi della rete eseguendo un ASFND (automa a stati finiti non deterministico). Il protocollo Bitcoin permette di implementare e deployare sulla rete degli automi anche più complessi. Script è il linguaggio di programmazione stack-based non Turing-completo che permette di descrivere questi automi in Bitcoin. Quando la complessità degli automi aumenta, si parla di smart contract, ovvero di contratti che permettono lo sblocco di fondi previa verifica di un insieme complesso di regole.
 
@@ -68,13 +68,13 @@ In questa tesi il capitolo due tratta il background necessario, in particolare s
 **Scalabilità off-chain** Nel Capitolo 1 sono stati introdotti i limiti architetturali della blockchain e le tre categorie di approcci risolutivi. La scalabilità off-chain è una delle tipologie di soluzioni atta a superare i limiti di scalabilità della blockchain. Questo approccio riduce sensibilmente le interazioni necessarie sulla blockchain, spostandole fuori di essa, senza compromettere le proprietà di sicurezza. 
 
 ** State channel
-Gli state channel permettono a due parti di modificare in maniera sicura porzioni della blockchain, dette depositi di stato. Questi depositi di stato sono memorizzati all'interno di indirizzi multisignature. Le parti modificano lo stato dello state channel scambiando messaggi off-chain. Questi messaggi descrivono un aggiornamento dello stato, per esempio la prossima mossa in una partita di tris.
+Gli state channel permettono a due parti di modificare in maniera sicura porzioni della blockchain, dette depositi di stato. Questi depositi di stato sono memorizzati all'interno di indirizzi multisignature. Le parti modificano lo stato dello state channel scambiando messaggi off-chain. Questi messaggi descrivono un aggiornamento dello stato, per esempio la prossima mossa in una partita di tris [@StateCha71].
 
 *** Payment channel
-Un payment channel è una particolare tipologia di state channel. I messaggi scambiati off-chain rappresentano dei pagamenti, ovvero l'aggiornamento del bilancio delle parti. Instaurare un payment channel richiede una singola operazione on-chain da ciascuna parte. L'operazione on-chain viene eseguita su uno smart contract dedicato al singolo payment channel. Questo singolo requisito garantisce di poter effettuare un numero illimitato di pagamenti off-chain, nei limiti del balance iniziale delle parti. I messaggi off-chain possono essere scambiati mediante qualunque mezzo, comunemente una connessione http. Un payment channel permette dunque di spostare i problemi di scalabilità dalla blockchain a un server http, ma la letteratura riguardo a come far scalare quest'ultimo è consolidata.
+Un payment channel è una particolare tipologia di state channel. I messaggi scambiati off-chain rappresentano dei pagamenti, ovvero l'aggiornamento del bilancio delle parti. Instaurare un payment channel richiede una sola operazione on-chain da ciascuna parte. L'operazione on-chain viene eseguita su uno smart contract dedicato al singolo payment channel. Questa unica operazione on-chain abilita un numero illimitato di pagamenti off-chain, nei limiti del balance iniziale delle parti. I messaggi off-chain possono essere scambiati mediante qualunque mezzo, comunemente una connessione http. Un payment channel permette dunque di spostare i problemi di scalabilità dalla blockchain a un server http, ma la letteratura riguardo a come far scalare quest'ultimo è consolidata.
 
 
-**Architettura** Un payment channel permette di effettuare un numero illimitato di transazioni off-chain tra due parti. Ciascuna parte deve mettere a disposizione un server http che permetta l'invio e la ricezione di pagamenti. Una delle due parti deploya lo smart contract e apre il canale. In un secondo momento la controparte effettua il join del canale, stabilendone la definitiva apertura. In questa progettazione si è presa in considerazione la blockchain di Ethereum.
+**Architettura** Un payment channel permette di effettuare un numero illimitato di transazioni off-chain tra due parti. Ciascuna parte deve mettere a disposizione un server http che permetta l'invio e la ricezione di pagamenti. Una delle due parti deploya lo smart contract associato e apre il canale. In un secondo momento la controparte effettua il join del canale, stabilendone la definitiva apertura. In questa progettazione si è presa come riferimento la blockchain di Ethereum.
 
 
 **Deploy** Il deploy è la prima fase di inizializzazione. Alice deploya lo smart contract del relativo canale. L'operazione di deployment è richiesta per ciascun singolo payment channel. Questa fase permette di ottenere l'indirizzo di un contratto, che nelle successive fasi verrà adottato per richiamare le operazioni on-chain che si intende richiamare. In questa fase lo stato del payment channel è detta $INIT$.
@@ -90,7 +90,7 @@ Alice -> (Smart contract [INIT]): Deploy
 #+RESULTS:
 [[file:deploy_payment_channel.png]]
 
-**Apertura** Alice apre il canale. Alice apre il canale e blocca un quantitativo arbitrario di fondi all’interno dello smart contract. Questi fondi rappresentano il bilancio iniziale di Alice. Si fa notare come la fase di deploy e di apertura possano essere svolte con un'unica operazione on-chain. Oltre a depositare i fondi, Alice con questa operazione porta in catena il suo indirizzo ip e l'indirizzo ethereum di Berto. Terminata la procedura lo stato del canale diventa $OPENED$.
+**Apertura** Alice apre il canale e blocca un quantitativo arbitrario di fondi all’interno dello smart contract. Questi fondi rappresentano il bilancio iniziale di Alice. Si fa notare come la fase di deploy e di apertura possano essere svolte con un'unica operazione on-chain. Oltre a depositare i fondi, Alice con questa operazione porta in catena il suo indirizzo ip e l'indirizzo ethereum di Berto. Terminata la procedura lo stato del canale diventa $OPENED$.
 
 #+begin_src plantuml :file apertura_payment_channel.png
 skinparam dpi 300
@@ -134,65 +134,68 @@ Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
 
 **Finalizzazione della chiusura** L'operazione di finalizzazione della chiusura viene effettuata da tutte e due le parti. Essa corrisponde al ritiro on-chain dei rispettivi fondi. Questa operazione può essere effettuata solo quando è passato un certo tempo dalla richiesta di chiusura. Il tempo che occorre attendere per finalizzare la chiusura è detto grace period.
 
-**Discutere una propose** Alice (o Berto) potrebbe non comportarsi correttamente, portando in chiusura una propose diversa dalla più recente. In questo caso Berto può discutere la propose durante il grace period. Discutere una propose significa portare in catena una propose firmata da Alice con numero di sequenza maggiore. Nel caso in cui la discussione abbia successo, Alice viene punita; la punizione consiste nel trasferimento di tutti i suoi fondi a Berto.
+**Discutere una propose** Alice (o Berto) potrebbe non comportarsi correttamente, portando in chiusura una propose diversa dalla più recente. In questo caso Berto può discutere la propose durante il grace period. Discutere una propose significa portare in catena una propose firmata da Alice con numero di sequenza maggiore rispetto a quella presentata. Nel caso in cui la discussione abbia successo, Alice viene punita; la punizione consiste nel trasferimento di tutti i suoi fondi a Berto.
 
 
-**Il problema della free-option** Quando Alice invia una propose a Berto senza ricevere la controfirma, Berto ha il vantaggio di poter scegliere di chiudere il canale con due propose, l'ultima e la penultima. Inviare una propose coincide con inviare un pagamento, quindi sebbene Berto possa decidere di presentare in catena la penultima propose, questa descriverà uno stato per lui più svantaggioso.
+**Il problema della free-option** Quando Alice invia una propose a Berto senza ricevere la controfirma, Berto ha il vantaggio di poter scegliere di chiudere il canale con due propose, la penultima o l'ultima. Inviare una propose coincide con inviare un pagamento, quindi sebbene Berto possa decidere di presentare in catena la penultima propose, questa descriverà uno stato per lui più svantaggioso.
 
 *** Inextinguishable payment channel
-I payment channel permettono di trasferire un volume di coin limitato. Il valore trasferibile è fissato alla somma del balance di Alice e di Berto. Spesso questi canali sono sbilanciati, ovvero una delle due controparti effettua più pagamenti dell'altra. Un canale sbilanciato nel tempo prosciuga il balance di una delle due parti, rendendo il payment channel inutilizzabile. L'unica soluzione consiste nel chiudere il payment channel corrente e aprirne un nuovo, caricando nuovi fondi. Questa soluzione richiede delle operazioni on-chain onerose (deploy, apertura e join). Gli IPC (inextinguishable payment channel) superano questo problema, proponendo dei canali di pagamento che permettono di caricare e scaricare a caldo il balance.
+I payment channel permettono di trasferire un volume di coin limitato. Il valore trasferibile è fissato alla somma del balance di Alice e di Berto. Spesso questi canali sono sbilanciati, ovvero una delle due controparti effettua più pagamenti dell'altra. Un canale sbilanciato nel tempo prosciuga il balance di una delle due parti, rendendo il payment channel inutilizzabile. L'unica soluzione consiste nel chiudere il payment channel corrente e aprirne un nuovo, caricando nuovi fondi. Questa soluzione richiede delle operazioni on-chain onerose (deploy, apertura e join). Gli IPC (inextinguishable payment channel) superano questo problema, proponendo dei canali di pagamento che permettono di caricare e scaricare a caldo i balance.
 
 
-**Schema attach/detach** Descrizione di questo schema.
+**Schema detach/attach** Questo schema rappresenta un'estensione dello schema propose/accept. Esso permette di staccare un token off-chain e di attaccarlo on-chain. Un token rappresenta un certo quantitativo del bilancio, esso ha la seguente struttura:
 
-
-**Estensione della propose** La struttura dati relativa a una propose viene
-estesa, in particolare vengono aggiunti i sequenti campi:
-| Campo         | Descrizione                                                  |
-|---------------+--------------------------------------------------------------|
-| hash_token    | L'hash relativo al token                                     |
-| typeOfPropose | Il tipo di operazione che si sta effettuando (attach/detach) |
-| typeOfChain   | Il tipo di catena di riferimento (OnChain/OffChain)          |
-
-
-**Struttura di un token** Un token ha la seguente struttura
 | Campo      | Descrizione                  |
 |------------+------------------------------|
 | seq        | Numero di sequenza del token |
 | value      | Valore del token             |
-| expiration | Tempo di vita di un token    |
 | sign       | Firma del token              |
 
+Anche la struttura dati relativa a una propose viene estesa; questi sono i nuovi campi aggiunti:
 
-**Ritiro a caldo** Effettua il ritiro a caldo effettuando prima il detach di un
-  token OffChain e poi l'attach di un token OnChain.
+| Campo           | Descrizione              |
+|-----------------+--------------------------|
+| hash_token      | L'hash relativo al token |
+| type_of_propose | attach/detach            |
 
-**Ricarica a caldo** Senza schema attach/detach.
+**Ritiro a caldo** Alice vuole ritirare a caldo 0.5 eth; effettua il detach off-chain di un token; invia a Berto una propose contenente un token di 0.5 eth che scala da balance_a. Berto risponde con propose e token firmati. Il token firmato rappresenta la PoD (Proof of Detachment). Alice effettua l'attach in catena della PoD e ritira a caldo 0.5 eth.
+
+
+**Ricarica a caldo** Alice vuole ricaricare a caldo il canale di 0.5 eth; effettua l'attacch on-chain di un token depositando nello smart contract 0.5 eth. Questa operazione on-chain viene notificata a Berto; tale notifica rappresenta la PoA (Proof of Attachment). A questo punto Alice invia a Berto una propose in cui effettua l'attach di un token di pari valore e incrementa di 0.5 eth il proprio balance. Berto risponde con la propose firmata, confermando la ricarica a caldo.
+
+
+**Double spending di un token** Quando Alice ritira a caldo presentando un token, lo smart contract associa una PoA (Proof of Attachment) relativa al numero di sequenza del token corrente. Questo permette allo smart contract di non accettare token già spesi.
+
 
 ** Fulgur Hub
-Le motivazioni di Fulgur.
-*** Obiettivi
-**Transazioni immediate** Bitcoin ci mette un'ora, noi le vogliamo immediate.
+Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la scalabilità off-chain, essi sono degli strumenti rudimentali e con una esperienza utente limitata. Non è infatti pensabile dover inizializzare un canale di pagamento con ciascun individuo con cui si voglia instaurare un rapporto economico. Fulgur Hub nasce dalla necessità di migliorare l'esperienza utente degli IPC e di potenziare alcune delle loro caratteristiche.
+
+*** Caratteristiche
+**Transazioni istantanee ed economiche** In Bitcoin la conferma di una transazione richiede 60 minuti. In un IPC basta lo scambio di due messaggi su protocollo http per effettuare e confermare un pagamento. Questo apre diverse e interessanti prospettive economiche, ad esempio una macchina in cloud potrebbe essere pagata per secondo di utilizzo o il proprio stipendio potrebbe essere accreditato per ogni minuto di lavoro svolto; FulgurHub abilita questi casi d'uso.
 
 
-**Transazioni tra più di due entità** Payment channel solo due, noi ne vogliamo
-N.
+**Transazioni tra più di due entità** In un IPC i pagamenti possono essere effettuati tra due partecipanti. FulgurHub  permettere di effettuare pagamenti tra gli N utenti registrati ad un FulgurHub.
 
 
-**Transazioni intra hub** Il sistema funziona anche con più di un hub.
+**Pagamenti ibridi** FulgurHub permette di effettuare dei pagamenti ibridi. Ciascun utente infatti possiede due balance, uno on-chain e uno off-chain e può decidere di spostare dei fondi da uno stato off-chain a uno stato on-chain e viceversa. Inoltre abilita i pagamenti tra utenti di due FulgurHub diversi.
+
+**Autogestito** In un IPC l'utente deve costantemente verificare e accettare la validità di un pagamento, oltre a contestare eventuali comportamentei scorretti della controparte. In FulgurHub i server degli utenti e dell'hub si occupano di gestire autonomamente diversi scenari, limitando allo stretto necessario l'intervento manuale.
 
 
-**Autogestito** Non serve stare davanti al computer.
+**Pagamenti trustless** Caratteristica essenziale è che un utente onesto abbia la certezza di non perdere i propri fondi. In sistemi centralizzati questa garanzia esiste perché ci si fida di un'entità centrale, come una banca o un servizio di e-payment. In un FulgurHub questa garanzia è data dal protocollo stesso, in questo senso i pagamenti sono trustless.
 
 
-**Non censurabile** bla bla bla
+**Passività e anonimato** FulgurHub è un sistema passivo; questo significa che l'hub non contatta mai gli utenti, ma solo quest'ultimi contattano l'hub. Questo permette agli utenti di non dover fornire il loro indirizzo ip reale e quindi di poter effettuare pagamenti anche dietro una rete come Tor.
+
 *** Lavori correlati
-**Lightning Network** Descrizione della topologia di rete a confronto e censura.
-  Si predilige un hub ben interconnesso (+passaggi=+fee). Superamento del
-  problema di ricerca del percorso ottimo.
+**Tumblebit** Si tratta di un hub di pagamenti anonimo basato su Bitcoin. L'approccio di centralizzazione garantisce anonimato e pagamenti trustless. Sfortunatamente il particolare payment channel adottato è unidirezionale e ha un tempo di vita limitato [@heilman2017tumblebit].
 
 
-**NOCUST** Conferma di una transazione non immediata.
+**CoinBlesk** Un bitcoin wallet che usa un server centrale che permette di eseguire dei pagamenti virtuali. Supporta micropagamenti istantanei, ma l'approccio non è considerabile trustless [@bocek2017coinblesk].
+
+
+**Lightning e Raiden Network** Entrambi i network si basano su un grafo di payment channel bidirezionali. Un pagamento avviene in maniera analoga all'instradamento di un pacchetto su internet. Una volta trovato il percorso ottimo esso deve essere completato con successo in ciascun hop intermedio. Se un solo hop fallisce il pagamento fallisce. Questo garantisce l'atomicità dei pagamenti [@poon2016bitcoin] [@raiden] . Sebbene Lightning Network e Raiden Network siano progettati per essere decentralizzati, la realtà economica fa tendere la topologia di rete alla centralizzazione; maggiore è il numero di hop, maggiori sono le commissioni e le probabilità di insuccesso della transazione. FulgurHub è stato disegnato con questo in mente e propone una topologia hub and spoke.
+
 * Analisi
 ** Obiettivi
 *** Dimostrazione di fattibilità
