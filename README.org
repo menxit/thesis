@@ -12,6 +12,7 @@
 #+PANDOC_VARIABLES: "dedica:Ad Ada Lovelace"
 #+PANDOC_VARIABLES: toc-depth:2
 #+PANDOC_VARIABLES: lof:true
+#+PANDOC_VARIABLES: lot:true
 #+PANDOC_VARIABLES: documentclass:book
 #+PANDOC_VARIABLES: fontsize:12pt
 #+PANDOC_VARIABLES: linestretch:1.25
@@ -120,15 +121,16 @@ Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
 **Schema propose/accept** I pagamenti off-chain avvengono mediante lo schema propose/accept. Alice (o Berto) propone un aggiornamento dello stato del canale firmando questa proposta con la propria chiave privata. Berto riceve la proposta, ne verifica la validità ed eventualmente l'accetta inviando la proposta controfirmata ad Alice. Il pagamento è avvenuto, senza la necessità di ulteriori tempi di attesa o conferme. 
 
 
-**Gli endpoint pubblici** Ciascuna controparte di un payment channel mette a disposizione un server http. Gli endpoint pubblici sono detti /propose e /accept. L'endpoint /propose permette di ricevere una proposta di aggiornamento di bilancio. L'endpoint /accept permette di ricevere una proposta precedentemente inviata, controfirmata. La struttura di una propose è illustrata nella tabella seguente.
+**Gli endpoint pubblici** Ciascuna controparte di un payment channel mette a disposizione un server http. Gli endpoint pubblici sono detti /propose e /accept. L'endpoint /propose permette di ricevere una proposta di aggiornamento di bilancio. L'endpoint /accept permette di ricevere una proposta precedentemente inviata, controfirmata in Tabella [[struct_propose]].
 
+#+CAPTION: Struttura di una propose
+#+LABEL: struct_propose
 | Campo     | Descrizione                                        |
 |-----------+----------------------------------------------------|
 | seq       | Il numero di sequenza                              |
 | balance_a | Il balance di chi ha aperto il canale              |
 | balance_b | Il balance di chi ha effettuato il join del canale |
 | sign      | La firma della propose                             |
-
 
 **Richiesta di chiusura** Chiudere un canale significa aggiornare il balance on-chain delle parti in modo tale che corrisponda a quello dell'ultima propose comunemente accordata. La prima fase di questo processo è detta richiesta di chiusura. In particolare si porta in catena l'ultima propose comunemente firmata. In questo modo lo stato del canale passa da $ESTABLISHED$ a $CLOSED$. La richiesta di chiusura può essere effettuata da Alice o da Berto.
 
@@ -143,16 +145,20 @@ Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
 I payment channel permettono di trasferire un volume di coin limitato. Il valore trasferibile è fissato alla somma del balance di Alice e di Berto. Spesso questi canali sono sbilanciati, ovvero una delle due controparti effettua più pagamenti dell'altra. Un canale sbilanciato nel tempo prosciuga il balance di una delle due parti, rendendo il payment channel inutilizzabile. L'unica soluzione consiste nel chiudere il payment channel corrente e aprirne un nuovo, caricando nuovi fondi. Questa soluzione richiede delle operazioni on-chain onerose (deploy, apertura e join). Gli IPC (inextinguishable payment channel) superano questo problema, proponendo dei canali di pagamento che permettono di caricare e scaricare a caldo i balance.
 
 
-**Schema detach/attach** Questo schema rappresenta un'estensione dello schema propose/accept. Esso permette di staccare un token off-chain e di attaccarlo on-chain. Un token rappresenta un certo quantitativo del bilancio, esso ha la seguente struttura:
+**Schema detach/attach** Questo schema rappresenta un'estensione dello schema propose/accept. Esso permette di staccare un token off-chain e di attaccarlo on-chain. Un token rappresenta un certo quantitativo del bilancio. La struttura di un token è illustrato in Tabella [[struct_token]].
 
+#+CAPTION: Struttura di un token
+#+LABEL: struct_token
 | Campo      | Descrizione                  |
 |------------+------------------------------|
 | seq        | Numero di sequenza del token |
 | value      | Valore del token             |
 | sign       | Firma del token              |
 
-Anche la struttura dati relativa a una propose viene estesa; questi sono i nuovi campi aggiunti:
+Anche la struttura dati relativa a una propose viene estesa. I campi aggiunti sono illustrati in Tabella [[propose_estesa]].
 
+#+CAPTION: Campi propose aggiuntivi in un IPC
+#+LABEL: propose_estesa
 | Campo           | Descrizione              |
 |-----------------+--------------------------|
 | hash token      | L'hash relativo al token |

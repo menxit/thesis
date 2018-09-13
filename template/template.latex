@@ -164,9 +164,9 @@ $endif$
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 $if(numbersections)$
-\setcounter{secnumdepth}{$if(secnumdepth)$$secnumdepth$$else$5$endif$}
+\counterwithout{figure}{section}
 $else$
-\setcounter{secnumdepth}{0}
+\counterwithout{figure}{section}
 $endif$
 $if(subparagraph)$
 $else$
@@ -292,7 +292,7 @@ $if(toc)$
 $if(colorlinks)$
 \hypersetup{linkcolor=$if(toccolor)$$toccolor$$else$black$endif$}
 $endif$
-\setcounter{tocdepth}{$toc-depth$}
+\counterwithout{table}{section}
 \tableofcontents
 }
 $endif$
