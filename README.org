@@ -247,11 +247,11 @@ Dario -left-> (FulgurHub)
 \phi^{\sigma_C, \sigma_H}_i = <\beta^C_i, \beta^H_i, \tau_j ,\mathbb{D}||\mathbb{A}>_(\sigma_C, \sigma_H)
 \end{equation}
 
-Un token è identificato in maniera univoca dalla tupla $(j, ID(H))$, dove $j$ identifica il numero di sequenza del token e $ID(H)$ un codice univoco del particolare FulgurHub che si sta utilizzando. Il client staccando un token può sottrarre una porzione $\nu_j$ del proprio bilancio. Un token può essere staccato dal bilancio on-chain od off-chain. Un token può essere recapitato al pagato. Il pagato per riscuotere un token deve attaccarlo off-chain (mediante una propose) od on-chain (mediante lo smart contract). Esistono due tipi di token; quelli riscuotibili on-chain ($\mathbb{ON}$) e quelli riscuotibili off-chain ($\mathbb{OFF}$). Inoltre un token può essere firmato dal client ($\tau^{\sigma_C}$), dall'hub ($\tau^{\sigma_H}$) o da entrambi ($\tau^{\sigma_C,\sigma_H}$). Un token può essere riscosso entro un tempo di scadenza $\exp$.
+Un token è identificato in maniera univoca dalla tupla $(j, \alpha_P)$, dove $j$ identifica il numero di sequenza del token e $\alpha_P$ l'indirizzo ethereum del pagato. Il client staccando un token può sottrarre una porzione $\nu_j$ del proprio bilancio. Un token può essere staccato dal bilancio on-chain od off-chain. Un token può essere recapitato al pagato. Il pagato per riscuotere un token deve attaccarlo off-chain (mediante una propose) od on-chain (mediante lo smart contract). Esistono due tipi di token; quelli riscuotibili on-chain ($\mathbb{ON}$) e quelli riscuotibili off-chain ($\mathbb{OFF}$). Inoltre un token può essere firmato dal client ($\tau^{\sigma_C}$), dall'hub ($\tau^{\sigma_H}$) o da entrambi ($\tau^{\sigma_C,\sigma_H}$). Un token può essere riscosso entro un tempo di scadenza $\exp$.
 
 \begin{equation}
 \label{Un esempio di token}
-\tau^{\sigma_C,\sigma_H}_{y, ID(H)} = <\nu_y, exp, \mathbb{ON} || \mathbb{OFF}>
+\tau^{\sigma_C,\sigma_H}_{y, ID(P)} = <\nu_y, exp, \mathbb{ON} || \mathbb{OFF}>
 \end{equation}
 
 Una propose $\phi^{\sigma_C}_i$ con un token $\tau_y$ detached ($\mathbb{D}$) firmato rappresenta una ricevuta di pagamento. La ricevuta pagamento è una prova incontrovertibile della riscossione di un token.
@@ -298,20 +298,23 @@ Un pagamento OffChain-OffChain sposta fondi dal balance off-chain di Alice $\bet
 
 **Precondizioni** \\
 a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
-b) Le ultime propose confermate nei canali di Alice e Berto sono $\phi^A_i$ e $\phi^Bn_j$.
+b) Le ultime propose confermate nei canali di Alice e Berto sono $\phi^A_i$ e $\phi^B_j$.
 
-**Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_y$ controfirmati.
+**Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ controfirmati.
 
 \begin{equation}
+\begin{aligned}
 \label{Propose detach pagamento OffChain-OffChain}
-\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_y ,\mathbb{D}>_(\sigma_A)
+\tau^{\sigma_A}_{y, \alpha_B} =  <\nu_y, exp, \mathbb{OFF}>\\
+\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{D}>_(\sigma_A)
+\end{aligned}
 \end{equation}
 
-$\tau^{\sigma_A,\sigma_H}_y$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto costruisce $\phi^{\sigma_B}_{j+1}$ effettuando l'attach della PoD.
+$\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto costruisce $\phi^{\sigma_B}_{j+1}$ effettuando l'attach della PoD.
 
 \begin{equation}
 \label{Propose attach pagamento OffChain-OffChain}
-\phi^{\sigma_B}_{j+1} = <j+1, \beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_A}_y ,\mathbb{A}>_(\sigma_B)
+\phi^{\sigma_B}_{j+1} = <j+1, \beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{A}>_(\sigma_B)
 \end{equation}
 
 Berto invia la ricevuta di pagamento $\phi^{\sigma_B}_{j+1}$ ad Alice. Alice ora ha in mano una prova incontrovertibile del fatto che il suo token sia stato riscosso. In questa fase l'hub si è esposto di $\nu_i$ fondi sul canale di Berto; Alice deve ribilanciare questa situazione e lo fa costruendo $\phi^{\sigma_B}_{j+1}$, una nuova propose in cui attacca la PoD ricevuta da Berto.
@@ -336,47 +339,108 @@ Un pagamento OffChain-OnChain consiste nel spostare fondi dal balance off-chain 
 
 **Precondizioni** \\
 a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
-b) Ok
+b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$.
 
-**Descrizione delle interazioni** 
+**Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ controfirmati.
+
+\begin{equation}
+\begin{aligned}
+\label{Propose detach pagamento OffChain-OnChain}
+\tau^{\sigma_A}_{y, \alpha_B} =  <\nu_y, exp, \mathbb{ON}> \\
+\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{D}>_(\sigma_A)
+\end{aligned}
+\end{equation}
+
+$\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto effettua l'attach on-chain del token mediante la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Berto in $\overline{\beta^B}+\nu_y$. Il pagamento è considerato concluso.
 *** Pagamento OnChain-OffChain
+Un pagamento OnChain-OffChain consiste nel spostare fondi dal balance on-chain di Alice $\overline{beta^A}$ al balance off-chain di Berto $\beta^B_j$.
 
-**Precondizioni**
+**Precondizioni** \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+b) L'ultima propose confermata nel canale di Berto è $\phi^B_j$ \\
+c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
-**Descrizione delle interazioni** 
+**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract fornendo l'indirizzo di Berto ($\alpha_B$) e il quantitativo $\nu$ che si vuole staccare. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Terminata l'esecuzione della funzione, lo smart contract invia la relativa PoD a Berto. Berto costruisce, firma e invia $\phi^{\sigma_B}_{j+1}$ all'hub, attaccando la PoD. L'hub risponde con la propose firmata $\phi^{\sigma_B,\sigma_H}_{j+1}$.
+
+\begin{equation}
+\begin{aligned}
+\label{Propose detach pagamento OnChain-OffChain}
+\tau^{\sigma_B}_y =  <\nu_y, \bot, \mathbb{ON}> \\
+\phi^{\sigma_B}_{j+1} = <\beta^B_j-\nu_y, \beta^H_j, \tau^{\sigma_B}_{y, \alpha_B} ,\mathbb{A}>_(\sigma_B)
+\end{aligned}
+\end{equation}
 
 *** Prelievo a caldo
-**Precondizioni**
+Effettuare un prelievo a caldo significa spostare dei fondi dal balance off-chain di Alice $\beta^A_i$ al balance on-chain di Alice $\overline{\beta^A}$.
 
-**Descrizione delle interazioni** 
+**Precondizioni** \\
+a) $\{\alpha^A\} \subseteq \Pi_{ID(H)}$ \\
+b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$ \\
+c) Il balance on-chain di Alice è $\overline{\beta_A}$
+
+**Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ controfirmati.
+
+\begin{equation}
+\begin{aligned}
+\label{Propose detach pagamento OffChain-OffChain}
+\tau^{\sigma_A}_{y, \alpha_B} =  <\nu_y, exp, \mathbb{OFF}>\\
+\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_A} ,\mathbb{D}>_(\sigma_A)
+\end{aligned}
+\end{equation}
+
+Alice presenta $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ in catena eseguendo la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$.
 
 *** Ricarica a caldo
-**Precondizioni**
+Effettuare una ricarica a caldo significa spostare $\nu$ fondi dal balance on-chain di Alice $\overline{\beta^A}$ a quello off-chain $\beta^A_i$.
 
-**Descrizione delle interazioni** 
+**Precondizioni** \\
+a) $\{\alpha^A\} \subseteq \Pi_{ID(H)}$ \\
+b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$ \\
+c) Il balance on-chain di Alice è $\overline{\beta_A}$
+
+**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract passando come parametri $\alpha_A$ e $\nu$. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}+\nu$. Una volta terminata l'esecuzione della funzione, lo smart contract invia all'hub e ad Alice la relativa PoD. Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ controfirmati.
+
+\begin{equation}
+\begin{aligned}
+\label{Propose detach pagamento OffChain-OffChain}
+\tau^{\sigma_A}_{y, \alpha_B} =  <\nu_y, \bot, \mathbb{OFF}>\\
+\phi^{\sigma_A}_{i+1} = <\beta^A_i+\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_A} ,\mathbb{A}>_(\sigma_A)
+\end{aligned}
+\end{equation}
 
 *** Chiusura di un canale
-**Precondizioni**
+**Precondizioni** \\
+a) $\{\alpha^A\} \subseteq \Pi_{ID(H)}$ \\
+b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$
 
-**Descrizione delle interazioni** 
+**Descrizione delle interazioni** Alice porta in catena l'ultima propose $\phi^A_i$ con la funzione close dello smart contract. Lo smart contract registra la richiesta di chiusura del canale e avvia un timer di durata pari a una costante $G$ dello smart contract, detta grace period. Scaduto il timer, Alice può ritirare tutti i suoi fondi $\overline{\beta^A}+\beta^A_{i}$ eseguendo la funzione withdraw dello smart contract.
 
-*** Riscossione dei pending token
-**Precondizioni**
+*** Riscossione di un pending token
+Un client può riscuotere dei pending token, ovvero dei token non ancora scaduti o utilizzati, durante il grace period.
 
-**Descrizione delle interazioni** 
+**Precondizioni** \\
+a) Alice ha avviato la chiusura del canale. \\
+b) Il timer $G$ non è ancora scaduto.
 
-**Tentativo di ritirare un pending token già usato**
+**Descrizione delle interazioni** Alice presenta in catena un pending token utilizzando la funzione redeemToken dello smart contract. L'esecuzione di questa funzione non corrisponde con il prelievo immediato del token. Una notifica della presentazione del token corrente viene inviata all'hub. Una volta scaduto $G$, Alice può riscuotere il suo balance (incrementato del quantitativo del token).
+
+**Tentativo di ritirare un pending token già usato** Alice presenta in catena un pending token già riscosso. Durante il grace period l'hub può portare in catena la relativa PoD del token utilizzando la funzione argueRedemptionToken. Alice viene punita per il suo comportamento malevolo; tutti i suoi fondi (on-chain e off-chain) vengono trasferiti all'hub.
+
 * Progettazione e sviluppo
 ** Le motivazioni tecnologiche
 *** La blockchain: Ethereum
 **Smart contract** Ethereum supporta smart contract.
+
 **Ambiente di sviluppo maturo** L'ambiete di sviluppo è maturo. Strumenti come Solidity, Ganache e Web3.
+
 **Altre soluzioni** Esistono altre soluzioni interessanti come Tezos che offrono il supporto agli Smart Contract.
 *** Il linguaggio di programmazione: TypeScript
 **Supporto di web3** Essendo TypeScript un meta-linguaggio JavaScript, c'è il supporto di web3.
+
 **Tipizzazione forte** Rispetto a JavaScript, TypeScript supporta la tipizzazione forte, il che favorisce l'intercettazione immediata di eventuali bug.
 *** Il database lato server: Redis
 **Throughput in scrittura** La velocità di scrittura in Redis è considerevole. Ottimo per questo caso d'uso.
+
 **Customizzazione delle qualità nei limiti del teorema CAP** Customizzazione delle qualità architetturali, nei limiti del teorema CAP. In particolare facendo tuning di parametri è possibile ottenere consistenza, disponibilità e sharding.
 ***** Consistenza
 ***** Disponibilità
@@ -385,6 +449,7 @@ b) Ok
 Database lato client con ottime performance.
 ** Lo smart contract
 **Implementazione in Solidity** Lo smart contract è stato implementato in Solidity.
+
 **Interfaccia in TypeScript** Le interazioni con lo smart contract avvengono mediante un'interfaccia TypeScript.
 ** Il client
 *** RPC privata
@@ -407,19 +472,26 @@ Di seguito vengono descritti gli endpoint dell'RPC privata del client.
 - Invio della ricevuta di pagamento
 *** Endpoint pubblici
 **Ricezione di una PoD**
+
 **Ricezione di una ricevuta di pagamento**
 *** Gestione degli eventi asincroni
 **Il Monitor**
+
 **Detach di un token on-chain**
+
 **Ricezione di una PoD**
 ** Hub
 *** Endpoint pubblici
 **Ricezione di una propose**
+
 **Ricezione di una ricevuta di pagamento**
 *** Gestione degli eventi asincroni
 **Il monitor**
+
 **Join di un utente**
+
 **Chiusura di un canale**
+
 **Ritiro di un pending token*
 * Prove sperimentali
 ** Gli obiettivi
