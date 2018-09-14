@@ -53,6 +53,8 @@ Questi tre diversi approcci alla scalabilità della blockchain non sono in contr
 In questa tesi il capitolo due tratta il background necessario, in particolare si approfondisce il design di un payment channel e si introduce l'architettura di FulgurHub. Nel terzo capitolo si effettua l'analisi nel dettaglio di FulgurHub. Nel quarto capitolo si descrivono le fasi di progettazione e sviluppo di FulgurHub. Nel quinto capitolo si mostrano le prove sperimentali relative a quanto è stato implementato e si discutono i risultati in termini di performance e scalabilità.
 
 * Background
+In questo capitolo si discute il background necessario. In particolare in sezione \ref{blockchain} si discute la blockchain: come funziona, i suoi casi d'uso e i suoi limiti. In sezione \ref{state-channel} si descrivono gli state channel, facendo un affondo sui payment channel e inextinguishable payment channel. Infine in sezione \ref{fulgur-hub} si introduce il protocollo FulgurHub: le sue motivazione, le caratteristiche e i lavori correlati.
+
 ** Blockchain
 **Il problema** La blockchain risolve il problema del double spending in un sistema peer-to-peer completamente decentralizzato [@nakamoto2008bitcoin]. Questo permette di memorizzare in maniera immutabile dei pagamenti in un registro pubblico, avendo la certezza che nessuno possa spendere più volte lo stesso token.
 
@@ -70,7 +72,6 @@ In questa tesi il capitolo due tratta il background necessario, in particolare s
 
 ** State channel
 Gli state channel permettono a due parti di modificare in maniera sicura porzioni della blockchain, dette depositi di stato. Questi depositi di stato sono memorizzati all'interno di indirizzi multisignature. Le parti modificano lo stato dello state channel scambiando messaggi off-chain. Questi messaggi descrivono un aggiornamento dello stato, per esempio la prossima mossa in una partita di tris [@StateCha71].
-
 *** Payment channel
 Un payment channel è una particolare tipologia di state channel. I messaggi scambiati off-chain rappresentano dei pagamenti, ovvero l'aggiornamento del bilancio delle parti. Instaurare un payment channel richiede una sola operazione on-chain da ciascuna parte. L'operazione on-chain viene eseguita su uno smart contract dedicato al singolo payment channel. Questa unica operazione on-chain abilita un numero illimitato di pagamenti off-chain, nei limiti del balance iniziale delle parti. I messaggi off-chain possono essere scambiati mediante qualunque mezzo, comunemente una connessione http. Un payment channel permette dunque di spostare i problemi di scalabilità dalla blockchain a un server http, ma la letteratura riguardo a come far scalare quest'ultimo è consolidata.
 
@@ -173,8 +174,8 @@ Anche la struttura dati relativa a una propose viene estesa. I campi aggiunti so
 **Double spending di un token** Quando Alice ritira a caldo presentando un token, lo smart contract associa una PoA (Proof of Attachment) relativa al numero di sequenza del token corrente. Questo permette allo smart contract di non accettare token già spesi.
 
 ** Fulgur Hub
+*** Motivazioni
 Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la scalabilità off-chain, essi sono degli strumenti rudimentali e con una esperienza utente limitata. Non è infatti pensabile dover inizializzare un canale di pagamento con ciascun individuo con cui si voglia instaurare un rapporto economico. Fulgur Hub nasce dalla necessità di migliorare l'esperienza utente degli IPC e di potenziare alcune delle loro caratteristiche.
-
 *** Caratteristiche
 **Transazioni istantanee ed economiche** In Bitcoin la conferma di una transazione richiede 60 minuti. In un IPC basta lo scambio di due messaggi su protocollo http per effettuare e confermare un pagamento. Questo apre diverse e interessanti prospettive economiche, ad esempio una macchina in cloud potrebbe essere pagata dopo ogni secondo di utilizzo o potremmo vedere il nostro stipendio accreditato dopo ogni minuto di lavoro; FulgurHub abilita questi casi d'uso.
 
@@ -202,149 +203,258 @@ Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la 
 **Lightning e Raiden Network** Entrambi i network si basano su un grafo di payment channel bidirezionali. Un pagamento avviene in maniera analoga all'instradamento di un pacchetto su internet. Una volta trovato il percorso ottimo esso deve essere completato con successo in ciascun hop intermedio. Se un solo hop fallisce il pagamento fallisce. Questo garantisce l'atomicità dei pagamenti [@poon2016bitcoin] [@raiden]. Sebbene Lightning Network e Raiden Network siano progettati per essere decentralizzati, la realtà economica fa tendere la topologia di rete alla centralizzazione; maggiore è il numero di hop, maggiori sono le commissioni e le probabilità di insuccesso. FulgurHub è stato disegnato con questo in mente e propone una topologia hub and spoke.
 
 * Analisi
+In questo capitolo si descrive il processo di analisi svolto. In particolare in sezione \ref{obiettivi} si discutono gli obiettivi dell'analisi. In sezione \ref{descrizione-generale-dellarchitettura} si descrive l'architettura generale di FulgurHub. Infine in sezione \ref{casi-duso} si descrivono i principali casi d'uso e la gestione di eventuali eccezioni.
 ** Obiettivi
-*** Dimostrazione di fattibilità
-**** Transazioni OffChain-OffChain
-**** Transazioni OnChain-OnChain
-**** Transazioni OffChain-OnChain
-**** Transazioni OnChain-OffChain
-**** Prelievi a caldo
-**** Ricariche a caldo
-*** Dimostrare la scalabilità architetturale
+**Dimostrazione di fattibilità** Un obiettivo di questa tesi è stato dimostrare la fattibilità del protocollo FulgurHub. In particolare ci si è concentrati sulle feature principali: apertura di un canale, pagamenti OnChain-OnChain, pagamenti OffChain-OffChain, pagamenti OffChain-OnChain, pagamenti OnChain-OffChain, prelievi a caldo, ricariche a caldo, chiusura di un canale e riscossione di pending token.
+
+
+**Dimostrare la scalabilità architetturale** Come detto in capitolo \ref{background}, le motivazioni che hanno mosso la progettazione di FulgurHub riguardano i limiti architetturali di scalabilità della blockchain. Obiettivo di questa tesi è stato anche dimostrare la scalabilità architetturale di FulgurHub.
 ** Descrizione generale dell'architettura
-*** Lo smart contract
-*** Il client
-*** L'hub
-** Casi d'uso
-*** Apertura di un canale
-**** Pre condizioni
-**** Descrizione delle interazioni
-#+begin_src plantuml :file uml.png
-alice -> berto
+Il sistema si basa su uno smart contract. Lo smart contract gestisce il balance on-chain e il payment channel di ciascun utente. In figura [[architecture-hub-and-spoke]] si mostra l'architettura hub-and-spoke, in cui 4 utenti (Alice, Berto, Cecilia e Dario) operano su FulgurHub [@federicospini2018].
+
+#+begin_src plantuml :file hub-and-spoke-architecture.png
+skinparam dpi 300
+skinparam SequenceMessageAlign center
+rectangle FulgurHub #yellow
+rectangle Alice #white
+rectangle Berto #whyte
+rectangle Cecilia #white
+rectangle Dario #white
+Alice -up-> (FulgurHub)
+Berto -right-> (FulgurHub)
+Cecilia -down-> (FulgurHub)
+Dario -left-> (FulgurHub)
 #+end_src
-#+CAPTION: UML
+
+#+CAPTION: Architettura hub-and-spoke di FulgurHub
+#+LABEL: architecture-hub-and-spoke
+#+ATTR_HTML: :width 55% :placement [!htb]
 #+RESULTS:
-[[file:uml.png]]
+[[file:hub-and-spoke-architecture.png]]
+
+
+**Hub** L'hub è supportato da un modulo software che interagisce con lo smart contract. Il modulo è stateless, favorendo disponibilità e scalabilità. L'hub è passivo, questo significa che non contatta mai direttamente i client; solo i client possono contattare l'hub. I client possono contattare l'hub mediante richieste http a uno dei suoi endpoint pubblici.
+
+**Client** La relazione tra client e hub può essere descritta come una "registrazione trustless" del client al servizio di intermediazione offerto dall'hub  [@federicospini2018]. Il client è supportato da un modulo software che interagisce con lo smart contract e l'hub. La registrazione del client coincide con l'instaurare un IPC esteso che permetta dei pagamenti ibridi, come descritto in \ref{casi-duso}. Un client può chiudere la registrazione con l'hub in ogni momento; in particolare deve chiudere la propria registrazione appena si registra un comportamento dell'hub anomalo.
+
+**Smart contract** Lo smart contract garantisce la relazione trustless tra i client e l'hub. In particolare lo smart contract deve essere utilizzato quando una delle parti non si comporta correttamente. Oltre a questo l'hub si occupa di aprire e chiudere una sottoscrizione del client e gestire pagamenti ibridi che coinvolgano endpoint on-chain.
+
+** Casi d'uso
+**Strutture dati e simbolismo** FulgurHub si fonda su due tipi di strutture dati, le propose e i token. Una propose $\phi_i$ descrive il balance off-chain di client ($\beta^C_i$) e hub ($\beta^H_i$). Le propose sono ordinate totalmente sulla base del numero di sequenza $i$. Un token $\tau_j$ può essere staccato ($\mathbb{D}$) o attaccato ($\mathbb{A}$) ad una propose. Inoltre una propose può essere firmata dal client ($\phi^{\sigma_C}_i$), dall'hub ($\phi^{\sigma_H}_i$) o da entrambi ($\phi^{\sigma_C,\sigma_H}_i$).
+
+\begin{equation}
+\label{Un esempio di propose}
+\phi^{\sigma_C, \sigma_H}_i = <\beta^C_i, \beta^H_i, \tau_j ,\mathbb{D}||\mathbb{A}>_(\sigma_C, \sigma_H)
+\end{equation}
+
+Un token è identificato in maniera univoca dalla tupla $(j, ID(H))$, dove $j$ identifica il numero di sequenza del token e $ID(H)$ un codice univoco del particolare FulgurHub che si sta utilizzando. Il client staccando un token può sottrarre una porzione $\nu_j$ del proprio bilancio. Un token può essere staccato dal bilancio on-chain od off-chain. Un token può essere recapitato al pagato. Il pagato per riscuotere un token deve attaccarlo off-chain (mediante una propose) od on-chain (mediante lo smart contract). Esistono due tipi di token; quelli riscuotibili on-chain ($\mathbb{ON}$) e quelli riscuotibili off-chain ($\mathbb{OFF}$). Inoltre un token può essere firmato dal client ($\tau^{\sigma_C}$), dall'hub ($\tau^{\sigma_H}$) o da entrambi ($\tau^{\sigma_C,\sigma_H}$). Un token può essere riscosso entro un tempo di scadenza $\exp$.
+
+\begin{equation}
+\label{Un esempio di token}
+\tau^{\sigma_C,\sigma_H}_{y, ID(H)} = <\nu_y, exp, \mathbb{ON} || \mathbb{OFF}>
+\end{equation}
+
+Una propose $\phi^{\sigma_C}_i$ con un token $\tau_y$ detached ($\mathbb{D}$) firmato rappresenta una ricevuta di pagamento. La ricevuta pagamento è una prova incontrovertibile della riscossione di un token.
+
+Per indicare il balance on-chain di un'entità $k$ ad una propose con numero di sequenza pari a $i$ si usa il simbolo $\overline{\beta^k}$, mentre per indicare il balance off-chain $\beta^k_i$.
+
+L'indirizzo ethereum di un'entità $k$ è indicato dal simbolo $\alpha_k$. L'insieme di indirizzi ethereum che hanno una sottoscrizione attiva con il FulgurHub associato all'id $ID(H)$ è detto $\Pi^{ID(H)}$.
+
+*** Sottoscrizione di un FulgurHub
+Alice vuole sottoscrivere una registrazione su un FulgurHub. Questa attività coincide con l'apertura di un payment channel.
+
+**Precondizioni** \\
+a) $\{\alpha^A\} \not\subset \Pi_{ID(H)}$ \\
+b) L'hub ha deployato lo smart contract\\
+c) Il server dell'hub è in ascolto
+
+**Descrizione delle interazioni** Un client per sottoscrivere un FulgurHub deve eseguire la funzione subscribe dello smart contract fornendo il proprio indirizzo ethereum $\alpha_C$, il bilancio iniziale off-chain $\beta^C_0$ e on-chain $\overline{\beta^C}$. Inoltre il client deve indicare il bilancio iniziale off-chain dell'hub $\beta^H$. Una volta eseguita la transazioni on-chain viene recapitata una notifica all'hub $<\beta^C_0, \overline{\beta^C}, \beta^H, \alpha_C>$. In figura [[sottoscrizione-fulgur-hub]] viene fornito un diagramma di sequenza del caso d'uso.
+
+#+begin_src plantuml :file apertura-canale.png
+skinparam dpi 200
+Alice -> SmartContract: <latex>subscribe \tiny{<\beta^C_0, \overline{\beta^C}, \beta_H>}</latex>
+SmartContract -> Hub: <latex>SubscriptionEvent \tiny{<\beta^C_0, \overline{\beta^C}, \beta_H, \alpha_C>}</latex>
+#+end_src
+
+#+CAPTION: Sottoscrizione di un FulgurHub
+#+LABEL: sottoscrizione-fulgur-hub
+#+ATTR_HTML: :width 70% :placement [!htb]
+#+RESULTS:
+[[file:apertura-canale.png]]
 
 *** Pagamento OnChain-OnChain
-**** Pre condizioni
-**** Descrizione delle interazioni
-**** Gestione delle eccezioni
-***** Credito insufficiente del client OnChain
+Un pagamento OnChain-OnChain sposta $\nu$ fondi dal balance on-chain di Alice $\overline{\beta^A}$ al balance on-chain di Berto $\overline{\beta^B}$. Questo pagamento viene totalmente gestito dallo smart contract e non richiede alcuna interazione con i server dei client o dell'hub.
+
+**Precondizioni** \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+b) Il balance on-chain di Alice e Berto è rispettivamente pari $\overline{\beta^A}$ e $\overline{\beta^B}$
+
+**Descrizione delle interazioni** Alice esegue il metodo transfer dello smart contract. L'esecuzione del metodo richiede il quantitativo $\nu$ di fondi che si intende spostare e l'indirizzo ethereum $\alpha^B$ di Berto. Terminata l'esecuzione del metodo lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}-\nu$ e quello di Berto in $\overline{\beta^B}+\nu$
+
+**Credito insufficiente del client OnChain** Se $\nu > \overline{\beta^A}$ lo smart contract solleva un'eccezione.
+
 *** Pagamento OffChain-OffChain
-**** Pre condizioni
-**** Descrizione delle interazioni
-**** Gestione delle eccezioni
-***** B non invia la ricevuta di pagamento ad A
-***** Generazione di una miriade di token
-***** L'hub non permette di attaccare un token
-***** L'hub non permette di staccare un token
-***** A si rifiuta di regolare un trasferimento nei confronti dell'hub
-***** Tentativo di pagamento con un token scaduto
-***** Mancanza di cooperazione nel ricevere un pagamento
+Un pagamento OffChain-OffChain sposta fondi dal balance off-chain di Alice $\beta^A_i$ a quello di Berto $\beta^B_i$. Questo tipo di pagamento non richiede interazioni con la catena, il che lo rende economico e istantaneo.
+
+**Precondizioni** \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+b) Le ultime propose confermate nei canali di Alice e Berto sono $\phi^A_i$ e $\phi^Bn_j$.
+
+**Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_y$ controfirmati.
+
+\begin{equation}
+\label{Propose detach pagamento OffChain-OffChain}
+\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_y ,\mathbb{D}>_(\sigma_A)
+\end{equation}
+
+$\tau^{\sigma_A,\sigma_H}_y$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto costruisce $\phi^{\sigma_B}_{j+1}$ effettuando l'attach della PoD.
+
+\begin{equation}
+\label{Propose attach pagamento OffChain-OffChain}
+\phi^{\sigma_B}_{j+1} = <j+1, \beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_A}_y ,\mathbb{A}>_(\sigma_B)
+\end{equation}
+
+Berto invia la ricevuta di pagamento $\phi^{\sigma_B}_{j+1}$ ad Alice. Alice ora ha in mano una prova incontrovertibile del fatto che il suo token sia stato riscosso. In questa fase l'hub si è esposto di $\nu_i$ fondi sul canale di Berto; Alice deve ribilanciare questa situazione e lo fa costruendo $\phi^{\sigma_B}_{j+1}$, una nuova propose in cui attacca la PoD ricevuta da Berto.
+
+\begin{equation}
+\label{Propose detach pagamento OffChain-OffChain}
+\phi^{\sigma_B}_{j+1} = <j+1, \beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_B}_y ,\mathbb{A}>_(\sigma_B)
+\end{equation}
+
+Il pagamento OffChain-OffChain è considerato concluso.
+
+**B non invia la ricevuta di pagamento ad A** Il collegamento tra Alice e Berto è opzionale. Alice infatti può contattare l'hub e richiedere la ricevuta di pagamento.
+
+**L'hub non permette di staccare un token** Se l'hub non è collaborativo, Alice chiude il canale.
+
+**L'hub non permette di attaccare un token** Se l'hub non è collaborativo, Berto ha la facoltà di chiudere il canale e successivamente di riscuotere il pending token on-chain.
+
+**Mancanza di cooperazione nel ricevere un pagamento** Il client può cancellare il pagamento al termine della sua scadenza, ritirandolo off-chain.
+
 *** Pagamento OffChain-OnChain
-**** Pre condizioni
-**** Descrizione delle interazioni
+Un pagamento OffChain-OnChain consiste nel spostare fondi dal balance off-chain di Alice $\beta^A_i$ al balance on-chain di Berto $\overline{\beta^B}$.
+
+**Precondizioni** \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+b) Ok
+
+**Descrizione delle interazioni** 
 *** Pagamento OnChain-OffChain
-**** Pre condizioni
-**** Descrizione delle interazioni
+
+**Precondizioni**
+
+**Descrizione delle interazioni** 
+
 *** Prelievo a caldo
-**** Pre condizioni
-**** Descrizione delle interazioni
+**Precondizioni**
+
+**Descrizione delle interazioni** 
+
 *** Ricarica a caldo
-**** Pre condizioni
-**** Descrizione delle interazioni
+**Precondizioni**
+
+**Descrizione delle interazioni** 
+
 *** Chiusura di un canale
-**** Pre condizioni
-**** Descrizione delle interazioni
+**Precondizioni**
+
+**Descrizione delle interazioni** 
+
 *** Riscossione dei pending token
-**** Pre condizioni
-**** Descrizione delle interazioni
-**** Gestione delle eccezioni
-***** Tentativo di ritirare un pending token già usato
+**Precondizioni**
+
+**Descrizione delle interazioni** 
+
+**Tentativo di ritirare un pending token già usato**
 * Progettazione e sviluppo
 ** Le motivazioni tecnologiche
 *** La blockchain: Ethereum
-**** Supporto degli smart contract
-**** Ambiente di sviluppo maturo
-***** Solidity
-***** Ganache
-***** Web3
-**** Altre soluzioni
-tesoz ecc..
+**Smart contract** Ethereum supporta smart contract.
+**Ambiente di sviluppo maturo** L'ambiete di sviluppo è maturo. Strumenti come Solidity, Ganache e Web3.
+**Altre soluzioni** Esistono altre soluzioni interessanti come Tezos che offrono il supporto agli Smart Contract.
 *** Il linguaggio di programmazione: TypeScript
-**** Supporto di web3
-**** Tipizzazione forte
+**Supporto di web3** Essendo TypeScript un meta-linguaggio JavaScript, c'è il supporto di web3.
+**Tipizzazione forte** Rispetto a JavaScript, TypeScript supporta la tipizzazione forte, il che favorisce l'intercettazione immediata di eventuali bug.
 *** Il database lato server: Redis
-**** Throughput considerevole in scrittura
-**** Customizzazione delle qualità nei limiti del teorema CAP
+**Throughput in scrittura** La velocità di scrittura in Redis è considerevole. Ottimo per questo caso d'uso.
+**Customizzazione delle qualità nei limiti del teorema CAP** Customizzazione delle qualità architetturali, nei limiti del teorema CAP. In particolare facendo tuning di parametri è possibile ottenere consistenza, disponibilità e sharding.
 ***** Consistenza
 ***** Disponibilità
 ***** Sharding
 *** Il database lato client: LevelDB
+Database lato client con ottime performance.
 ** Lo smart contract
-*** Implementazione in Solidity
-*** Interfaccia in TypeScript
+**Implementazione in Solidity** Lo smart contract è stato implementato in Solidity.
+**Interfaccia in TypeScript** Le interazioni con lo smart contract avvengono mediante un'interfaccia TypeScript.
 ** Il client
 *** RPC privata
-tabella riassuntiva degli endpoint
-**** Join di un hub
-**** Trasferimento OnChain-OnChain
-**** Detach di un token OffChain-OffChain
-**** Detach di un token OnChain-OffChain
-**** Invio della PoD
-**** Redimere un pending token
-**** Attach di un token OnChain
-**** Regolazione di un pagamento OffChain
-**** Invio della ricevuta di pagamento
+Di seguito vengono descritti gli endpoint dell'RPC privata del client.
+
+**/join** Permette di effettuare una sottoscrizione all'hub.  
+
+**/detachOffChainOffChain** Permette di effettuare il detach di un token off-chain. Questo token potrà poi riutilizzabile off-chain.
+
+**/detachOnChainOffChain** Permette di effettuare il detach di un token on-chain. Questo token potrà poi essere attaccato off-chain.
+
+- Join di un hub
+- Trasferimento OnChain-OnChain
+- Detach di un token OffChain-OffChain
+- Detach di un token OnChain-OffChain
+- Invio della PoD
+- Redimere un pending token
+- Attach di un token OnChain
+- Regolazione di un pagamento OffChain
+- Invio della ricevuta di pagamento
 *** Endpoint pubblici
-**** Ricezione di una PoD
-**** Ricezione di una ricevuta di pagamento
+**Ricezione di una PoD**
+**Ricezione di una ricevuta di pagamento**
 *** Gestione degli eventi asincroni
-**** Il monitor
-**** Gli eventi
-***** Detach di un token OnChain
-***** Ricezione di una PoD
+**Il Monitor**
+**Detach di un token on-chain**
+**Ricezione di una PoD**
 ** Hub
 *** Endpoint pubblici
-**** Ricezione di una propose
-**** Ricezione di una ricevuta di pagamento
+**Ricezione di una propose**
+**Ricezione di una ricevuta di pagamento**
 *** Gestione degli eventi asincroni
-**** Il monitor
-**** Gli eventi
-***** Join di un utente
-***** Chiusura di un canale
-***** Ritiro di un pending token
+**Il monitor**
+**Join di un utente**
+**Chiusura di un canale**
+**Ritiro di un pending token*
 * Prove sperimentali
 ** Gli obiettivi
-*** Verifica delle performance delle transazioni OffChain
-*** Verifica della scalabilità dell'hub
+**Verifica performance**
+
+**Verifica scalabilità architetturale**
+
 ** L'approccio adottato
-*** Benchmark server
-**** Deploy dell'ambiente di collaudo basato su Docker Swarm
-**** Esecuzione del benchmark
-***** Transazioni seriali
-***** Transazioni concorrenti
-***** Simulazione della latenza di rete
+**Benchmark server**
+
+**Docker swarm**
+
+**Transazioni seriali**
+
+**Transazioni concorrenti**
+
+**Simulazione della latenza di rete**
+
 ** Il throughput lato client
-*** Risultati
-**** Al variare della RAM
-***** Tabella
-***** Grafico
-**** Al variare della CPU
-***** Tabella
-***** Grafico
+**Al variare della RAM**
+
+**Al variare della CPU**
+
+**Al variare della latenza**
 ** Il throughput lato hub
-*** Risultati
-**** Al variare della RAM
-***** Tabella
-***** Grafico
-**** Al variare della CPU
-***** Tabella
-** Considerazioni sulle performance
-** Considerazioni sulla scalabilità
-*** Replicare l'hub
-*** Replicare redis
+**Al variare della RAM**
+
+**Al variare della CPU**
+
+**Al variare della latenza**
+** Considerazioni
+**Performance e rete**
+
+**Scalabilità dell'hub**
+
 * Conclusioni e sviluppi futuri
-** Autogestione finanziaria dell'hub
-** Endpoint denominati in maniera diversa
+**Autogestione finanziaria**
+**Endpoint denominati in maniera diversa**

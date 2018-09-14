@@ -1,4 +1,5 @@
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(papersize)$$papersize$paper,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
+\usepackage[utf8]{inputenc} 
 \usepackage{graphicx}
 \usepackage{svg}
 $if(beamerarticle)$
@@ -164,9 +165,9 @@ $endif$
 \providecommand{\tightlist}{%
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 $if(numbersections)$
-\counterwithout{figure}{section}
+\setcounter{secnumdepth}{$if(secnumdepth)$$secnumdepth$$else$5$endif$}
 $else$
-\counterwithout{figure}{section}
+\setcounter{secnumdepth}{3}
 $endif$
 $if(subparagraph)$
 $else$
@@ -291,17 +292,23 @@ $if(toc)$
 {
 $if(colorlinks)$
 \hypersetup{linkcolor=$if(toccolor)$$toccolor$$else$black$endif$}
-$endif$
-\counterwithout{table}{section}
+$endif$    
+\setcounter{tocdepth}{$toc-depth$}
 \tableofcontents
 }
 $endif$
+
 $if(lot)$
+\counterwithout{table}{chapter}
 \listoftables
 $endif$
 $if(lof)$
+\counterwithout{figure}{chapter}
 \listoffigures
 $endif$
+
+\counterwithout{equation}{chapter}
+
 $body$
 
 $if(natbib)$
