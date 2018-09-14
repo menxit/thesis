@@ -210,7 +210,7 @@ In questo capitolo si descrive il processo di analisi svolto. In particolare in 
 
 **Dimostrare la scalabilità architetturale** Come detto in capitolo \ref{background}, le motivazioni che hanno mosso la progettazione di FulgurHub riguardano i limiti architetturali di scalabilità della blockchain. Obiettivo di questa tesi è stato anche dimostrare la scalabilità architetturale di FulgurHub.
 ** Descrizione generale dell'architettura
-Il sistema si basa su uno smart contract. Lo smart contract gestisce il balance on-chain e il payment channel di ciascun utente. In figura [[architecture-hub-and-spoke]] si mostra l'architettura hub-and-spoke, in cui 4 utenti (Alice, Berto, Cecilia e Dario) operano su FulgurHub [@federicospini2018].
+Il sistema si basa su uno smart contract. Lo smart contract gestisce il balance on-chain e il payment channel di ciascun utente. In figura [[architecture-hub-and-spoke]] si mostra l'architettura hub-and-spoke in cui 4 utenti (Alice, Berto, Cecilia e Dario) operano su FulgurHub [@federicospini2018].
 
 #+begin_src plantuml :file hub-and-spoke-architecture.png
 skinparam dpi 300
@@ -235,16 +235,16 @@ Dario -left-> (FulgurHub)
 
 **Hub** L'hub è supportato da un modulo software che interagisce con lo smart contract. Il modulo è stateless, favorendo disponibilità e scalabilità. L'hub è passivo, questo significa che non contatta mai direttamente i client; solo i client possono contattare l'hub. I client possono contattare l'hub mediante richieste http a uno dei suoi endpoint pubblici.
 
-**Client** La relazione tra client e hub può essere descritta come una "registrazione trustless" del client al servizio di intermediazione offerto dall'hub  [@federicospini2018]. Il client è supportato da un modulo software che interagisce con lo smart contract e l'hub. La registrazione del client coincide con l'instaurare un IPC esteso che permetta dei pagamenti ibridi, come descritto in \ref{casi-duso}. Un client può chiudere la registrazione con l'hub in ogni momento; in particolare deve chiudere la propria registrazione appena si registra un comportamento dell'hub anomalo.
+**Client** La relazione tra client e hub può essere descritta come una "registrazione trustless" del client al servizio di intermediazione offerto dall'hub  [@federicospini2018]. Il client è supportato da un modulo software che interagisce con lo smart contract e l'hub. La registrazione del client coincide con l'instaurare un IPC esteso che permetta dei pagamenti ibridi, come descritto in \ref{casi-duso}. Un client può chiudere la registrazione dall'hub in ogni momento; in particolare deve chiudere la propria registrazione appena si verifica un comportamento anomalo dell'hub.
 
-**Smart contract** Lo smart contract garantisce la relazione trustless tra i client e l'hub. In particolare lo smart contract deve essere utilizzato quando una delle parti non si comporta correttamente. Oltre a questo l'hub si occupa di aprire e chiudere una sottoscrizione del client e gestire pagamenti ibridi che coinvolgano endpoint on-chain.
+**Smart contract** Lo smart contract garantisce la relazione trustless tra i client e l'hub. In particolare lo smart contract deve essere utilizzato quando una delle parti non si comporta correttamente. Oltre a questo lo smart contract si occupa di aprire/chiudere la sottoscrizione del client e di gestire pagamenti ibridi che coinvolgano endpoint on-chain.
 
 ** Casi d'uso
 **Strutture dati e simbolismo** FulgurHub si fonda su due tipi di strutture dati, le propose e i token. Una propose $\phi_i$ descrive il balance off-chain di client ($\beta^C_i$) e hub ($\beta^H_i$). Le propose sono ordinate totalmente sulla base del numero di sequenza $i$. Un token $\tau_j$ può essere staccato ($\mathbb{D}$) o attaccato ($\mathbb{A}$) ad una propose. Inoltre una propose può essere firmata dal client ($\phi^{\sigma_C}_i$), dall'hub ($\phi^{\sigma_H}_i$) o da entrambi ($\phi^{\sigma_C,\sigma_H}_i$).
 
 \begin{equation}
 \label{Un esempio di propose}
-\phi^{\sigma_C, \sigma_H}_i = <\beta^C_i, \beta^H_i, \tau_j ,\mathbb{D}||\mathbb{A}>_(\sigma_C, \sigma_H)
+\phi^{\sigma_C, \sigma_H}_i = <\beta^C_i, \beta^H_i, \tau_j ,\mathbb{D}||\mathbb{A}>
 \end{equation}
 
 Un token è identificato in maniera univoca dalla tupla $(j, \alpha_P)$, dove $j$ identifica il numero di sequenza del token e $\alpha_P$ l'indirizzo ethereum del pagato. Il client staccando un token può sottrarre una porzione $\nu_j$ del proprio bilancio. Un token può essere staccato dal bilancio on-chain od off-chain. Un token può essere recapitato al pagato. Il pagato per riscuotere un token deve attaccarlo off-chain (mediante una propose) od on-chain (mediante lo smart contract). Esistono due tipi di token; quelli riscuotibili on-chain ($\mathbb{ON}$) e quelli riscuotibili off-chain ($\mathbb{OFF}$). Inoltre un token può essere firmato dal client ($\tau^{\sigma_C}$), dall'hub ($\tau^{\sigma_H}$) o da entrambi ($\tau^{\sigma_C,\sigma_H}$). Un token può essere riscosso entro un tempo di scadenza $\exp$.
@@ -254,17 +254,17 @@ Un token è identificato in maniera univoca dalla tupla $(j, \alpha_P)$, dove $j
 \tau^{\sigma_C,\sigma_H}_{y, ID(P)} = <\nu_y, exp, \mathbb{ON} || \mathbb{OFF}>
 \end{equation}
 
-Una propose $\phi^{\sigma_C}_i$ con un token $\tau_y$ detached ($\mathbb{D}$) firmato rappresenta una ricevuta di pagamento. La ricevuta pagamento è una prova incontrovertibile della riscossione di un token.
+Una propose $\phi^{\sigma_C}_i$ con un token $\tau_y$ detached ($\mathbb{D}$) firmato rappresenta una ricevuta di pagamento. La ricevuta di pagamento è una prova incontrovertibile della riscossione di un token.
 
-Per indicare il balance on-chain di un'entità $k$ ad una propose con numero di sequenza pari a $i$ si usa il simbolo $\overline{\beta^k}$, mentre per indicare il balance off-chain $\beta^k_i$.
+Per indicare il balance off-chain di un'entità $k$ ad una propose con numero di sequenza pari a $i$ si usa il simbolo $\beta^k_i$, mentre per indicare il balance on-chain $\overline{\beta^k}$.
 
-L'indirizzo ethereum di un'entità $k$ è indicato dal simbolo $\alpha_k$. L'insieme di indirizzi ethereum che hanno una sottoscrizione attiva con il FulgurHub associato all'id $ID(H)$ è detto $\Pi^{ID(H)}$.
+L'indirizzo ethereum di un'entità $k$ è indicato dal simbolo $\alpha_k$. L'insieme di indirizzi ethereum che hanno una sottoscrizione attiva con il FulgurHub associato ad $H$ è detto $\Pi^H$.
 
 *** Sottoscrizione di un FulgurHub
 Alice vuole sottoscrivere una registrazione su un FulgurHub. Questa attività coincide con l'apertura di un payment channel.
 
 **Precondizioni** \\
-a) $\{\alpha^A\} \not\subset \Pi_{ID(H)}$ \\
+a) $\{\alpha^A\} \not\subset \Pi^H$ \\
 b) L'hub ha deployato lo smart contract\\
 c) Il server dell'hub è in ascolto
 
@@ -286,7 +286,7 @@ SmartContract -> Hub: <latex>SubscriptionEvent \tiny{<\beta^C_0, \overline{\beta
 Un pagamento OnChain-OnChain sposta $\nu$ fondi dal balance on-chain di Alice $\overline{\beta^A}$ al balance on-chain di Berto $\overline{\beta^B}$. Questo pagamento viene totalmente gestito dallo smart contract e non richiede alcuna interazione con i server dei client o dell'hub.
 
 **Precondizioni** \\
-a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) Il balance on-chain di Alice e Berto è rispettivamente pari $\overline{\beta^A}$ e $\overline{\beta^B}$
 
 **Descrizione delle interazioni** Alice esegue il metodo transfer dello smart contract. L'esecuzione del metodo richiede il quantitativo $\nu$ di fondi che si intende spostare e l'indirizzo ethereum $\alpha^B$ di Berto. Terminata l'esecuzione del metodo lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}-\nu$ e quello di Berto in $\overline{\beta^B}+\nu$
@@ -297,7 +297,7 @@ b) Il balance on-chain di Alice e Berto è rispettivamente pari $\overline{\beta
 Un pagamento OffChain-OffChain sposta fondi dal balance off-chain di Alice $\beta^A_i$ a quello di Berto $\beta^B_i$. Questo tipo di pagamento non richiede interazioni con la catena, il che lo rende economico e istantaneo.
 
 **Precondizioni** \\
-a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) Le ultime propose confermate nei canali di Alice e Berto sono $\phi^A_i$ e $\phi^B_j$.
 
 **Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ controfirmati.
@@ -306,7 +306,7 @@ b) Le ultime propose confermate nei canali di Alice e Berto sono $\phi^A_i$ e $\
 \begin{aligned}
 \label{Propose detach pagamento OffChain-OffChain}
 \tau^{\sigma_A}_{y, \alpha_B} =  <\nu_y, exp, \mathbb{OFF}>\\
-\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{D}>_(\sigma_A)
+\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{D}>
 \end{aligned}
 \end{equation}
 
@@ -314,14 +314,14 @@ $\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachmen
 
 \begin{equation}
 \label{Propose attach pagamento OffChain-OffChain}
-\phi^{\sigma_B}_{j+1} = <j+1, \beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{A}>_(\sigma_B)
+\phi^{\sigma_B}_{j+1} = <\beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_A}_{y, \alpha_B} ,\mathbb{A}>
 \end{equation}
 
-Berto invia la ricevuta di pagamento $\phi^{\sigma_B}_{j+1}$ ad Alice. Alice ora ha in mano una prova incontrovertibile del fatto che il suo token sia stato riscosso. In questa fase l'hub si è esposto di $\nu_i$ fondi sul canale di Berto; Alice deve ribilanciare questa situazione e lo fa costruendo $\phi^{\sigma_B}_{j+1}$, una nuova propose in cui attacca la PoD ricevuta da Berto.
+Berto invia la ricevuta di pagamento $\phi^{\sigma_B}_{j+1}$ ad Alice. Alice ora ha in mano una prova incontrovertibile del fatto che il suo token sia stato riscosso. In questa fase l'hub si è esposto di $\nu_i$ fondi sul canale di Berto; Alice deve ribilanciare questa situazione e lo fa costruendo $\phi^{\sigma_A}_{i+2}$, una nuova propose in cui attacca la PoD ricevuta da Berto.
 
 \begin{equation}
-\label{Propose detach pagamento OffChain-OffChain}
-\phi^{\sigma_B}_{j+1} = <j+1, \beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_B}_y ,\mathbb{A}>_(\sigma_B)
+\label{Propose attach pagamento OffChain-OffChain}
+\phi^{\sigma_A}_{i+2} = <\beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_B}_y ,\mathbb{A}>_(\sigma_B)
 \end{equation}
 
 Il pagamento OffChain-OffChain è considerato concluso.
@@ -330,15 +330,15 @@ Il pagamento OffChain-OffChain è considerato concluso.
 
 **L'hub non permette di staccare un token** Se l'hub non è collaborativo, Alice chiude il canale.
 
-**L'hub non permette di attaccare un token** Se l'hub non è collaborativo, Berto ha la facoltà di chiudere il canale e successivamente di riscuotere il pending token on-chain.
+**L'hub non permette di attaccare un token** Se l'hub non è collaborativo, Berto ha la facoltà di chiudere il canale e successivamente riscuotere il pending token on-chain.
 
 **Mancanza di cooperazione nel ricevere un pagamento** Il client può cancellare il pagamento al termine della sua scadenza, ritirandolo off-chain.
 
 *** Pagamento OffChain-OnChain
-Un pagamento OffChain-OnChain consiste nel spostare fondi dal balance off-chain di Alice $\beta^A_i$ al balance on-chain di Berto $\overline{\beta^B}$.
+Un pagamento OffChain-OnChain consiste nel spostare fondi dal balance off-chain di Alice $\beta^A_i$ al balance on-chain dxi Berto $\overline{\beta^B}$.
 
 **Precondizioni** \\
-a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$.
 
 **Descrizione delle interazioni** Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ controfirmati.
@@ -353,10 +353,10 @@ b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$.
 
 $\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto effettua l'attach on-chain del token mediante la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Berto in $\overline{\beta^B}+\nu_y$. Il pagamento è considerato concluso.
 *** Pagamento OnChain-OffChain
-Un pagamento OnChain-OffChain consiste nel spostare fondi dal balance on-chain di Alice $\overline{beta^A}$ al balance off-chain di Berto $\beta^B_j$.
+Un pagamento OnChain-OffChain consiste nel spostare fondi dal balance on-chain di Alice $\overline{\beta^A}$ al balance off-chain di Berto $\beta^B_j$.
 
 **Precondizioni** \\
-a) $\{\alpha^A, \alpha^B\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Berto è $\phi^B_j$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
@@ -366,7 +366,7 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 \begin{aligned}
 \label{Propose detach pagamento OnChain-OffChain}
 \tau^{\sigma_B}_y =  <\nu_y, \bot, \mathbb{ON}> \\
-\phi^{\sigma_B}_{j+1} = <\beta^B_j-\nu_y, \beta^H_j, \tau^{\sigma_B}_{y, \alpha_B} ,\mathbb{A}>_(\sigma_B)
+\phi^{\sigma_B}_{j+1} = <\beta^B_j-\nu_y, \beta^H_j, \tau^{\sigma_B}_{y, \alpha_B} ,\mathbb{A}>
 \end{aligned}
 \end{equation}
 
@@ -374,7 +374,7 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 Effettuare un prelievo a caldo significa spostare dei fondi dal balance off-chain di Alice $\beta^A_i$ al balance on-chain di Alice $\overline{\beta^A}$.
 
 **Precondizioni** \\
-a) $\{\alpha^A\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
@@ -384,7 +384,7 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 \begin{aligned}
 \label{Propose detach pagamento OffChain-OffChain}
 \tau^{\sigma_A}_{y, \alpha_B} =  <\nu_y, exp, \mathbb{OFF}>\\
-\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_A} ,\mathbb{D}>_(\sigma_A)
+\phi^{\sigma_A}_{i+1} = <\beta^A_i-\nu_y, \beta^H_i, \tau^{\sigma_A}_{y, \alpha_A} ,\mathbb{D}>
 \end{aligned}
 \end{equation}
 
@@ -394,7 +394,7 @@ Alice presenta $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ in catena eseguendo la f
 Effettuare una ricarica a caldo significa spostare $\nu$ fondi dal balance on-chain di Alice $\overline{\beta^A}$ a quello off-chain $\beta^A_i$.
 
 **Precondizioni** \\
-a) $\{\alpha^A\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
@@ -410,7 +410,7 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
 *** Chiusura di un canale
 **Precondizioni** \\
-a) $\{\alpha^A\} \subseteq \Pi_{ID(H)}$ \\
+a) $\{\alpha^A\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$
 
 **Descrizione delle interazioni** Alice porta in catena l'ultima propose $\phi^A_i$ con la funzione close dello smart contract. Lo smart contract registra la richiesta di chiusura del canale e avvia un timer di durata pari a una costante $G$ dello smart contract, detta grace period. Scaduto il timer, Alice può ritirare tutti i suoi fondi $\overline{\beta^A}+\beta^A_{i}$ eseguendo la funzione withdraw dello smart contract.
