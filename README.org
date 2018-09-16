@@ -272,13 +272,13 @@ c) Il server dell'hub è in ascolto
 
 #+begin_src plantuml :file apertura-canale.png
 skinparam dpi 200
-Alice -> SmartContract: <latex>subscribe \tiny{<\beta^C_0, \overline{\beta^C}, \beta_H>}</latex>
-SmartContract -> Hub: <latex>SubscriptionEvent \tiny{<\beta^C_0, \overline{\beta^C}, \beta_H, \alpha_C>}</latex>
+Alice -> SmartContract: <latex>\tiny{subscribe <\beta^C_0, \overline{\beta^C}, \beta_H>}</latex>
+SmartContract -> Hub: <latex>\tiny{SubscriptionEvent <\beta^C_0, \overline{\beta^C}, \beta_H, \alpha_C>}</latex>
 #+end_src
 
 #+CAPTION: Sottoscrizione di un FulgurHub
 #+LABEL: sottoscrizione-fulgur-hub
-#+ATTR_HTML: :width 70% :placement [!htb]
+#+ATTR_HTML: :width 100% :placement [!htb]
 #+RESULTS:
 [[file:apertura-canale.png]]
 
@@ -289,9 +289,18 @@ Un pagamento OnChain-OnChain sposta $\nu$ fondi dal balance on-chain di Alice $\
 a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) Il balance on-chain di Alice e Berto è rispettivamente pari $\overline{\beta^A}$ e $\overline{\beta^B}$
 
-**Descrizione delle interazioni** Alice esegue il metodo transfer dello smart contract. L'esecuzione del metodo richiede il quantitativo $\nu$ di fondi che si intende spostare e l'indirizzo ethereum $\alpha^B$ di Berto. Terminata l'esecuzione del metodo lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}-\nu$ e quello di Berto in $\overline{\beta^B}+\nu$
+**Descrizione delle interazioni** Alice esegue il metodo transfer dello smart contract. L'esecuzione del metodo richiede il quantitativo $\nu$ di fondi che si intende spostare e l'indirizzo ethereum $\alpha^B$ di Berto. Terminata l'esecuzione del metodo lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}-\nu$ e quello di Berto in $\overline{\beta^B}+\nu$. Un diagramma di sequenza è disponibile in figura [[caso-duso-onchain-onchain]].
 
-**Credito insufficiente del client OnChain** Se $\nu > \overline{\beta^A}$ lo smart contract solleva un'eccezione.
+#+begin_src plantuml :file caso-duso-onchain-onchain.png
+skinparam dpi 200
+Alice -> SmartContract: <latex>\tiny{transfer<\nu, \alpha^B>}</latex>
+#+end_src
+
+#+CAPTION: Pagamento OnChain-OnChain in FulgurHub.
+#+LABEL: caso-duso-onchain-onchain
+#+ATTR_HTML: :width 70% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-onchain-onchain.png]]
 
 *** Pagamento OffChain-OffChain
 Un pagamento OffChain-OffChain sposta fondi dal balance off-chain di Alice $\beta^A_i$ a quello di Berto $\beta^B_i$. Questo tipo di pagamento non richiede interazioni con la catena, il che lo rende economico e istantaneo.
@@ -324,7 +333,23 @@ Berto invia la ricevuta di pagamento $\phi^{\sigma_B}_{j+1}$ ad Alice. Alice ora
 \phi^{\sigma_A}_{i+2} = <\beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_B}_y ,\mathbb{A}>_(\sigma_B)
 \end{equation}
 
-Il pagamento OffChain-OffChain è considerato concluso.
+Il pagamento OffChain-OffChain è considerato concluso. In figura [[caso-duso-offchain-offchain]] viene fornito uno diagramma di sequenza delle interazioni.
+
+#+begin_src plantuml :file caso-duso-offchain-offchain.png
+skinparam dpi 200
+Alice -> Hub: <latex>\tiny{<\phi^{\sigma_A}_{i+1}>}</latex>
+Hub -> Alice: <latex>\tiny{<\phi^{\sigma_A,\sigma_H}_{i+1}>, <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
+Alice -> Berto: <latex>\tiny{<\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
+Berto -> Hub: <latex>\tiny{<\phi^{\sigma_B}_{j+1}>}</latex>
+Berto -> Alice: <latex>\tiny{<\phi^{\sigma_B}_{j+1}>}</latex>
+Alice -> Hub: <latex>\tiny{<\phi^{\sigma_A}_{i+2}>}</latex>
+#+end_src
+
+#+CAPTION: Pagamento OffChain-OffChain in FulgurHub.
+#+LABEL: caso-duso-offchain-offchain
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-offchain-offchain.png]]
 
 **B non invia la ricevuta di pagamento ad A** Il collegamento tra Alice e Berto è opzionale. Alice infatti può contattare l'hub e richiedere la ricevuta di pagamento.
 
@@ -351,7 +376,22 @@ b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$.
 \end{aligned}
 \end{equation}
 
-$\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto effettua l'attach on-chain del token mediante la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Berto in $\overline{\beta^B}+\nu_y$. Il pagamento è considerato concluso.
+$\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto effettua l'attach on-chain del token mediante la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Berto in $\overline{\beta^B}+\nu_y$. Il pagamento è considerato concluso. In figura [[caso-duso-offchain-onchain]] viene fornito uno diagramma di sequenza delle interazioni.
+
+#+begin_src plantuml :file caso-duso-offchain-onchain.png
+skinparam dpi 200
+Alice -> Hub: <latex>\tiny{<\phi^{\sigma_A}_{i+1}>}</latex>
+Hub -> Alice: <latex>\tiny{<\phi^{\sigma_A,\sigma_H}_{i+1}>, <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
+Alice -> Berto: <latex>\tiny{attach <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
+Berto -> SmartContract: <latex>\tiny{attach <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
+#+end_src
+
+#+CAPTION: Pagamento OffChain-OnChain in FulgurHub.
+#+LABEL: caso-duso-offchain-onchain
+#+ATTR_HTML: :width 70% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-offchain-onchain.png]]
+
 *** Pagamento OnChain-OffChain
 Un pagamento OnChain-OffChain consiste nel spostare fondi dal balance on-chain di Alice $\overline{\beta^A}$ al balance off-chain di Berto $\beta^B_j$.
 
@@ -360,7 +400,21 @@ a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Berto è $\phi^B_j$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
-**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract fornendo l'indirizzo di Berto ($\alpha_B$) e il quantitativo $\nu$ che si vuole staccare. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Terminata l'esecuzione della funzione, lo smart contract invia la relativa PoD a Berto. Berto costruisce, firma e invia $\phi^{\sigma_B}_{j+1}$ all'hub, attaccando la PoD. L'hub risponde con la propose firmata $\phi^{\sigma_B,\sigma_H}_{j+1}$.
+**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract fornendo l'indirizzo di Berto ($\alpha_B$) e il quantitativo $\nu$ che si vuole staccare. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Terminata l'esecuzione della funzione, lo smart contract invia la relativa PoD a Berto. Berto costruisce, firma e invia $\phi^{\sigma_B}_{j+1}$ all'hub, attaccando la PoD. L'hub risponde con la propose firmata $\phi^{\sigma_B,\sigma_H}_{j+1}$. In figura [[caso-duso-onchain-offchain]] viene fornito uno diagramma di sequenza delle interazioni.
+
+#+begin_src plantuml :file caso-duso-onchain-offchain.png
+skinparam dpi 200
+Alice -> SmartContract: <latex>\tiny{detach <\alpha_B, \nu>}</latex>
+SmartContract -> Berto: <latex>\tiny{TokenDetached <\alpha_B, \nu>}</latex>
+Berto -> Hub: <latex>\tiny {<\phi^{\sigma_B}_{j+1}>}</latex>
+Hub -> Berto: <latex>\tiny {<\phi^{\sigma_B,\sigma_H}_{j+1}>}</latex>
+#+end_src
+
+#+CAPTION: Pagamento OnChain-OffChain in FulgurHub.
+#+LABEL: caso-duso-onchain-offchain
+#+ATTR_HTML: :width 70% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-onchain-offchain.png]]
 
 \begin{equation}
 \begin{aligned}
@@ -427,13 +481,14 @@ b) Il timer $G$ non è ancora scaduto.
 **Tentativo di ritirare un pending token già usato** Alice presenta in catena un pending token già riscosso. Durante il grace period l'hub può portare in catena la relativa PoD del token utilizzando la funzione argueRedemptionToken. Alice viene punita per il suo comportamento malevolo; tutti i suoi fondi (on-chain e off-chain) vengono trasferiti all'hub.
 
 * Progettazione e sviluppo
+In questo capitolo si descrive la fase di progettazione e di sviluppo. In particolare in sezione \ref{le-motivazioni-tecnologiche} si descrivono le tecnologie utilizzate e le motivazioni dietro la loro scelta. In sezione \ref{lo-smart-contract} si descrive lo smart contract che supporta FulgurHub. In sezione \ref{il-client} si descrive il modulo software utilizzato dagli utenti di FulgurHub. In sezione \ref{hub} si descrive il modulo software utilizzato dal gestore di un FulgurHub.
 ** Le motivazioni tecnologiche
 *** La blockchain: Ethereum
-**Smart contract** Ethereum supporta smart contract.
+**Smart contract** Lo smart contract che supporta le operazioni on-chain di FulgurHub è compatibile con la blockchain di Ethereum. In particolare lo smart contract è stato sviluppato in linguaggio Solidity.
 
-**Ambiente di sviluppo maturo** L'ambiete di sviluppo è maturo. Strumenti come Solidity, Ganache e Web3.
+**Ambiente di sviluppo maturo** Le motivazioni principali che hanno mosso la scelta di Ethereum riguardano il supporto di smart contract turing completi e l'ambiente di sviluppo maturo. In particolare sono stati utilizzati i seguenti tool e linguaggi: Solidity, ganache, web3. Solidity è il linguaggio di programmazione turing completo con il quale è possibile sviluppare degli smart contract. Ganache è una blockchain di test deployabile in locale, che semplifica la fase di test di uno smart contract. Infine web3 è un'interfaccia in JavaScript che permette di eseguire le operazioni più comuni sulla blockchain di Ethereum. 
 
-**Altre soluzioni** Esistono altre soluzioni interessanti come Tezos che offrono il supporto agli Smart Contract.
+**Altre soluzioni** Esistono altre interessanti soluzioni alternative a Ethereum. Una in particolare è Tezos.
 *** Il linguaggio di programmazione: TypeScript
 **Supporto di web3** Essendo TypeScript un meta-linguaggio JavaScript, c'è il supporto di web3.
 
