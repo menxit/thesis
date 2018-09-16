@@ -484,28 +484,37 @@ b) Il timer $G$ non è ancora scaduto.
 In questo capitolo si descrive la fase di progettazione e di sviluppo. In particolare in sezione \ref{le-motivazioni-tecnologiche} si descrivono le tecnologie utilizzate e le motivazioni dietro la loro scelta. In sezione \ref{lo-smart-contract} si descrive lo smart contract che supporta FulgurHub. In sezione \ref{il-client} si descrive il modulo software utilizzato dagli utenti di FulgurHub. In sezione \ref{hub} si descrive il modulo software utilizzato dal gestore di un FulgurHub.
 ** Le motivazioni tecnologiche
 *** La blockchain: Ethereum
-**Smart contract** Lo smart contract che supporta le operazioni on-chain di FulgurHub è compatibile con la blockchain di Ethereum. In particolare lo smart contract è stato sviluppato in linguaggio Solidity.
+**Smart contract** Lo smart contract che supporta le operazioni on-chain di questa implementazione di FulgurHub è compatibile con la blockchain di Ethereum.
 
-**Ambiente di sviluppo maturo** Le motivazioni principali che hanno mosso la scelta di Ethereum riguardano il supporto di smart contract turing completi e l'ambiente di sviluppo maturo. In particolare sono stati utilizzati i seguenti tool e linguaggi: Solidity, ganache, web3. Solidity è il linguaggio di programmazione turing completo con il quale è possibile sviluppare degli smart contract. Ganache è una blockchain di test deployabile in locale, che semplifica la fase di test di uno smart contract. Infine web3 è un'interfaccia in JavaScript che permette di eseguire le operazioni più comuni sulla blockchain di Ethereum. 
+**Ambiente di sviluppo maturo** Le motivazioni che hanno mosso la scelta di Ethereum rispetto altre blockchain riguardano il supporto di smart contract e l'ambiente di sviluppo maturo. In particolare sono stati utilizzati i seguenti tool e linguaggi: Solidity, ganache, web3. Solidity è il linguaggio di programmazione C-like turing completo con il quale è stato sviluppato lo smart contract alla base di FulgurHub. Solidity mette a disposizione un compilatore e un debugger. Il compilatore trasforma il linguaggio in codice macchina compatibile con la EVM (Ethereum Virtual Machine). Il debugger di Solidity permette di conoscere lo stato intermedio di uno smart contract durante la sua esecuzione. Ganache è una blockchain di test deployabile in locale, che semplifica la fase di test di uno smart contract; Ganache permette di deployare ed eseguire uno smart contract gratuitamente e in maniera veloce, senza utilizzare la rete principale di Ethereum. Infine web3 è un'interfaccia in JavaScript che permette di eseguire le operazioni più comuni sulla blockchain di Ethereum, come il deployment di uno smart contract, l'esecuzione di una funzione o un pagamento. 
 
-**Altre soluzioni** Esistono altre interessanti soluzioni alternative a Ethereum. Una in particolare è Tezos.
+**Altre soluzioni** Esistono altre interessanti soluzioni alternative a Ethereum. Una in particolare è Tezos. Tezos come Ethereum mette a disposizione la possibilità di deployare smart contract con un linguaggio di programmazione turing-completo. Il linguaggio di riferimento è Michelson, un subset di Ocaml che semplifica la verifica formale di correttezza di uno smart contract. Sebbene Tezos non sia stato utilizzato in fase di sviluppo, un suo futuro impiego potrebbe essere facilmente integrabile grazie alla definizione di un'interfaccia dello smart contract (vedi sezione \ref{lo-smart-contract}).
+
 *** Il linguaggio di programmazione: TypeScript
-**Supporto di web3** Essendo TypeScript un meta-linguaggio JavaScript, c'è il supporto di web3.
+**Supporto di web3** Il modulo software sviluppato esegue le funzioni dello smart contract mediante web3, un'interfaccia JavaScript che permette di eseguire operazioni sulla blockchain di Ethereum. TypeScript, il linguaggio di programmazione adottato è un meta-linguaggio di JavaScript, il che ha permesso la definizione di un'interfaccia che wrappasse le funzionalità di web3 necessarie.
 
-**Tipizzazione forte** Rispetto a JavaScript, TypeScript supporta la tipizzazione forte, il che favorisce l'intercettazione immediata di eventuali bug.
-*** Il database lato server: Redis
-**Throughput in scrittura** La velocità di scrittura in Redis è considerevole. Ottimo per questo caso d'uso.
+**Tipizzazione forte** Alternativamente a TypeScript si sarebbe potuto utilizzare JavaScript. Rispetto a JavaScript è stato impiegato TypeScript dato il supporto della tipizzazione forte. Questo ha permesso di definire interfacce stabili e di intercettare eventuali bug già in fase di compilazione.
 
-**Customizzazione delle qualità nei limiti del teorema CAP** Customizzazione delle qualità architetturali, nei limiti del teorema CAP. In particolare facendo tuning di parametri è possibile ottenere consistenza, disponibilità e sharding.
-***** Consistenza
-***** Disponibilità
-***** Sharding
+*** Il database lato hub: Redis
+**Throughput in scrittura** Come descritto nel capitolo \ref{analisi} l'hub riceve dei messaggi firmati dai client che deve memorizzare. Per la natura del protocollo di FulgurHub questi messaggi vengono frequentemente memorizzati e raramente letti. Il numero delle scritture può essere anche ingente. Per questi motivi si è deciso di utilizzare un database chiave valore; in particolare è stato utilizzato Redis, per il suo considerevole throughput in scrittura.
+
+**Customizzazione delle qualità nei limiti del teorema CAP** Altro motivo per cui è stato adottato Redis rispetto a un altro database chiave-valore è rappresentato dalla possibilità di effettuare tuning delle sue qualità architetturali. In particolare il teorema CAP dice che un database può avere solo due tra queste caratteristiche contemporaneamente:
+- Consistenza
+- Disponibilità
+- Sharding
+
+Redis permette di scegliere quali di queste due caratteristiche avere. In una prima fase di un FulgurHub ha senso scegliere solamente la consistenza e la disponibilità. Sebbene un requisito essenziale dell'architettura sia la scalabilità, una singola istanza Redis su commodity hardware garantisce garantisce un throughput ampiamente sufficiente [@Howfasti99]. 
+
+Nel caso in cui si debba aumentare il numero di transazioni al secondo si potrà scegliere tra scalare verticalmente l'hardware o abilitare lo sharding a sfavore della disponibilità.
+
 *** Il database lato client: LevelDB
-Database lato client con ottime performance.
-** Lo smart contract
-**Implementazione in Solidity** Lo smart contract è stato implementato in Solidity.
+Anche il client come l'hub deve essere supportato da un database. In questo caso la scelta è ricaduta su LevelDB. LevelDB è un database chiave valore single process, multi thread basato sulle API linux POSIX. Anche qui la scelta è ricaduta su un database chiave valore date le ottime performance in scrittura [@googlele43].
 
-**Interfaccia in TypeScript** Le interazioni con lo smart contract avvengono mediante un'interfaccia TypeScript.
+** Lo smart contract
+**Implementazione in Solidity** Lo smart contract è stato implementato in Solidity. La gestione dello smart contract si basa su una mappa ti dipo $indirizzoEthereum \rightarrow Wallet$. Un Wallet è una struttura dati che gestisce tutte le informazioni on-chain di un utente iscritto all'hub: balance on-chain, PoDs, PoAs, timestamp di chiusura di un canale e token riscossi. Oltre a questo gli smart contract mettono a disposizione gli eventi. Gli eventi sono dei messaggi che possono essere pubblicati nel momento in cui una qualche funzionalità di uno smart contract viene eseguita. Questi eventi sono pubblici e chiunque può mettersi in ascolto di eventi sulla base di certi parametri. In questo smart contract sono stati utilizzati vari eventi. $Subscribed$ è un evento che viene sollevato quando un nuovo utente si registra; serve a notificare che un utente si è registrato all'hub. $TokenDetached$ notifica che un token è stato staccato. $TokenAttached$ notifica che un token sia stato attaccato. $WalletClosed$ notifica l'hub che un utente sta chiudendo un canale; questa notifica serve all'hub per verificare che l'utente non abbia presentato una propose non valida.
+
+**Interfaccia in TypeScript** Le interazioni con lo smart contract avvengono mediante un'interfaccia TypeScript. Sì è deciso di implementare un'interfaccia TypeScript per non legare il particolare tipo di blockchain adottata (Ethereum) con l'implementazione in se. Sebbene infatti la scelta progettuale sia ricaduta su Ethereum, FulgurHub è un protocollo che può essere esteso su diverse tipologie di blockchain.
+
 ** Il client
 *** RPC privata
 Di seguito vengono descritti gli endpoint dell'RPC privata del client.
