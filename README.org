@@ -175,7 +175,7 @@ Anche la struttura dati relativa a una propose viene estesa. I campi aggiunti so
 
 ** Fulgur Hub
 *** Motivazioni
-Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la scalabilità off-chain, essi sono degli strumenti rudimentali e con una esperienza utente limitata. Non è infatti pensabile dover inizializzare un canale di pagamento con ciascun individuo con cui si voglia instaurare un rapporto economico. Fulgur Hub nasce dalla necessità di migliorare l'esperienza utente degli IPC e di potenziare alcune delle loro caratteristiche.
+Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la scalabilità off-chain, essi sono degli strumenti rudimentali e con una esperienza utente limitata. Non è infatti pensabile dover inizializzare un canale di pagamento con ciascun individuo con cui si voglia instaurare un rapporto economico. Fulgur Hub nasce dalla necessità di migliorare l'esperienza utente degli IPC e di potenziare alcune delle loro caratteristiche [@federicospini2018].
 *** Caratteristiche
 **Transazioni istantanee ed economiche** In Bitcoin la conferma di una transazione richiede 60 minuti. In un IPC basta lo scambio di due messaggi su protocollo http per effettuare e confermare un pagamento. Questo apre nuove prospettive economiche, ad esempio una macchina in cloud potrebbe essere pagata dopo ogni secondo di utilizzo o si potrebbe vedere il proprio stipendio accreditato dopo ogni minuto di lavoro effettuato; FulgurHub abilita questi casi d'uso.
 
@@ -485,19 +485,19 @@ Questo capitolo descrive responsabilità, requisiti, motivazioni tecnologiche e 
 
 ** Smart contract
 *** Responsabilità e requisiti 
-Lo smart contract è il punto di contatto tra lo stato off-chain e quello on-chain. Lo stato on-chain si basa su una mappa ti dipo $indirizzo \rightarrow Wallet$. Un Wallet è una struttura dati che gestisce tutte le informazioni on-chain di un utente iscritto all'hub: balance on-chain, PoDs, PoAs, timestamp di chiusura di un canale e token riscossi. Un utente dell'hub che vuole interagire con il suo stato on-chain può farlo eseguendo una delle operazioni messe a disposizione. Queste operazioni riguardano l'iscrizione all'hub, i pagamenti ibridi, la chiusura di un wallet e la riscossione di pending token. Oltre a questo lo smart contract mette a disposizione degli eventi. Gli eventi sono dei messaggi che possono essere pubblicati nel momento in cui una qualche funzionalità viene eseguita. Questi eventi sono pubblici e chiunque può mettercisi in ascolto. Questo smart contract necessitas di vari eventi:
+Lo smart contract è il punto di contatto tra lo stato off-chain e quello on-chain. Lo stato on-chain si basa su una mappa ti dipo $indirizzo \rightarrow Wallet$. Un Wallet è una struttura dati che gestisce tutte le informazioni on-chain di un utente iscritto all'hub: balance on-chain, PoDs, PoAs, timestamp di chiusura di un canale e token riscossi. Un utente dell'hub che vuole interagire con il suo stato on-chain può farlo eseguendo una delle operazioni messe a disposizione. Queste operazioni riguardano l'iscrizione all'hub, i pagamenti ibridi, la chiusura di un wallet e la riscossione di pending token. Oltre a questo lo smart contract mette a disposizione degli eventi. Gli eventi sono dei messaggi che possono essere pubblicati nel momento in cui una qualche funzionalità viene eseguita. Questi eventi sono pubblici e chiunque può mettercisi in ascolto. Di seguito gli eventi messi a disposizione:
 
-- **Subscribed** viene sollevato quando un nuovo utente si registra; l'hub si iscrive a questo evento per poter registrare il nuovo utente sul suo database.
-- **TokenDetached** notifica che un token è stato staccato. 
-- **TokenAttached** notifica che un token è stato attaccato. 
-- **WalletClosed** notifica l'hub che un utente sta chiudendo un canale; questa notifica serve all'hub per verificare che l'utente non abbia presentato una propose non valida.
+- **Subscribed** viene sollevato quando un nuovo utente si registra; l'hub si iscrive a questo evento per poterlo memorizzare sul suo database.
+- **TokenDetached** notifica che un token è stato staccato on-chain.
+- **TokenAttached** notifica che un token è stato attaccato on-chain.
+- **WalletClosed** notifica che un utente sta chiudendo un canale; questa notifica serve all'hub per verificare che non sia stata presentata una propose non valida.
 
 *** Motivazioni tecnologiche
-La blockchain presa come riferimento è Ethereum. Le motivazioni che hanno mosso la scelta di questa blockchain rispetto ad altre riguardano: il supporto di smart contract e l'ambiente di sviluppo maturo. In particolare sono stati utilizzati i seguenti tool e linguaggi: Solidity, Ganache, Web3.
+La blockchain presa come riferimento è Ethereum. Le motivazioni che hanno mosso la scelta di questa blockchain rispetto ad altre riguardano il supporto di smart contract e l'ambiente di sviluppo maturo. In particolare sono stati utilizzati i seguenti tool e linguaggi: Solidity, Ganache, Web3.
 
-**Linguaggio di programmazione dello smart contract** Solidity è il linguaggio di programmazione C-like turing completo con il quale è possibile sviluppare gli smart contract in FulgurHub. Solidity mette a disposizione un compilatore e un debugger. Il compilatore trasforma il linguaggio in codice macchina compatibile con la EVM (Ethereum Virtual Machine). Il debugger di Solidity permette di conoscere lo stato intermedio di uno smart contract durante la sua esecuzione. 
+**Linguaggio di programmazione dello smart contract** Solidity è il linguaggio di programmazione C-like turing completo con il quale è possibile sviluppare gli smart contract in FulgurHub. Esso mette a disposizione un compilatore e un debugger. Il compilatore trasforma il linguaggio in codice macchina compatibile con la EVM (Ethereum Virtual Machine). Il debugger di Solidity permette di conoscere lo stato intermedio di uno smart contract durante la sua esecuzione. 
 
-**Rete blockchain di test** Ganache è una blockchain di test deployabile in locale, che semplifica la fase di test di uno smart contract; permette di deployare ed eseguire uno smart contract, senza utilizzare la rete principale di Ethereum. 
+**Rete blockchain di test** Ganache è una blockchain di test locale, che semplifica la fase di test di uno smart contract; permette di deployare ed eseguire uno smart contract, senza utilizzare la rete principale di Ethereum, abbattendo costi e tempi di sviluppo.
 
 **Interfaccia smart contract** Web3 è un'interfaccia in JavaScript che permette di eseguire le operazioni più comuni sulla blockchain di Ethereum (E.G. il deployment di uno smart contract, l'esecuzione di una funzione o un pagamento). Le interazioni con lo smart contract non avvengono direttamente con web3, ma sono wrappate da un'interfaccia di più alto livello. Sì è deciso di utilizzare questa interfaccia per non legare il particolare tipo di blockchain adottata con l'implementazione in se. Sebbene infatti la scelta progettuale sia ricaduta su Ethereum, questo approccio consente di estendere le funzionalità implementate su diverse tipologie di blockchain. Il linguaggio di programmazione adottato per implementare l'interfaccia di livello più alto è TypeScript; è stato utilizzato TypeScript rispetto a JavaScript dato il supporto della tipizzazione forte. Questo ha permesso di definire interfacce stabili e di intercettare eventuali bug già in fase di compilazione.
 
@@ -527,7 +527,7 @@ interface SmartContract {
 
 ** Client
 *** Responsabilità e requisiti
-Il client è il modulo che permette a un utente di interagire con l'hub, gli altri client e lo smart contract; esso deve rimanere attivo per il tempo di vita del canale di pagamento instaurato con l'hub. Le sue responsabilità riguardano: esecuzione di comandi privati/pubblici, gestione di eventi asincroni e registrazione dei messaggi off-chain scambiati.
+Il client è il modulo che permette a un utente di interagire con l'hub, gli altri client e lo smart contract; deve rimanere attivo per il tempo di vita del canale di pagamento instaurato con l'hub. Le sue responsabilità riguardano: esecuzione di comandi privati/pubblici, gestione di eventi asincroni e registrazione dei messaggi off-chain scambiati.
 
 **Comandi privati/pubblici** Un comando privato può essere eseguito solamente dall'utente associato al canale di pagamento. Questi comandi permettono di registrarsi all'hub, effettuare dei pagamenti, chiudere un canale e riscuotere pending token. Un comando pubblico è accessibile a qualunque utente associato a un certo FulgurHub; questi permettono di ricevere pagamenti off-chain e ricevute di pagamento.
 
@@ -536,16 +536,21 @@ Il client è il modulo che permette a un utente di interagire con l'hub, gli alt
 **Registrazione messaggi off-chain** Tutti i messaggi scambiati off-chain devono poter essere memorizzati in maniera permanente dal client.
 
 *** Motivazioni tecnologiche
-**RPC privata / endpoint pubblici** L'RPC privata e gli endpoint pubblici permettono di eseguire rispettivamente i comandi privati e pubblici. Entrambi sono stati implementati mediante un server http in Node.js; questo ha permesso di utilizzare TypeScript, mantenendo un unico linguaggio di programmazione backend. L'RPC è esposta su una porta privata ($10101$), mentre i comandi che devono esserre accessibili a tutti sono esposti su una porta pubblica ($80$).
+**RPC privata / endpoint pubblici** L'RPC privata e gli endpoint pubblici permettono di eseguire rispettivamente i comandi privati e pubblici. Entrambi sono stati implementati con un server http Node.js; questo ha permesso di utilizzare TypeScript, mantenendo un unico linguaggio di programmazione per il backend. L'RPC è esposta su una porta privata ($10101$), mentre i comandi che devono esserre accessibili a tutti sono esposti su una porta pubblica ($80$).
 
-**Il monitor** La gestione di eventi asincroni come gli eventi generati dallo smart contract è fondamentale in FulgurHub; per questo motivo si è deciso di localizzare questa responsabilità in un modulo dedicato denominato monitor. Il monitor gestisce due eventi asincroni: $onChainDetachment$ e onProofOfDetachmentPushed$. $onChainDetachment$ è un evento generato dallo smart contract quando qualcuno effettua il detach di un token on-chain a favore dell'utente corrente. onProofOfDetachmentPushed$ è un evento generato quando l'utente corrente riceve una nuova proof of detachment. Il comportamento legato a un evento non è contenuto all'interno del monitor; il monitor infatti permette solo di agganciare o sganciare a un evento un certo insieme di comportamenti, ovvero di funzioni. Questo approccio consente di estendere facilmente le funzionalità del modulo e quindi migliora la modificabilità del progetto.
+**Il monitor** La gestione di eventi asincroni come gli eventi generati dallo smart contract è fondamentale in FulgurHub; per questo motivo si è deciso di localizzare questa responsabilità in un modulo dedicato denominato monitor. Il monitor gestisce due eventi asincroni: $onChainDetachment$ e $onProofOfDetachmentPushed$.
+
+- $onChainDetachment$ è un evento generato dallo smart contract quando qualcuno effettua il detach di un token on-chain a favore dell'utente corrente.
+- $onProofOfDetachmentPushed$ è un evento generato quando l'utente corrente riceve una nuova proof of detachment. 
+
+Il comportamento legato a un evento non è contenuto all'interno del monitor; il monitor infatti permette solo di agganciare o sganciare a un evento un certo insieme di comportamenti, ovvero di funzioni. Questo approccio consente di estendere facilmente le funzionalità del modulo e quindi migliora la modificabilità del progetto.
 
 **Il database** La registrazione dei messaggi off-chain è stata delegata a un database. Priorità assoluta di questo database è che non rappresenti un collo di bottiglia per il throughput dei pagamenti. La scelta è ricaduta su LevelDB, un database chiave-valore embedded, single process, multi thread basato sulle API linux POSIX. Le motivazioni che supportano questa scelta riguardano le ottime performance in scrittura di LevelDB [@googlele43].
 
 *** Dettagli implementativi
 Di seguito sono descritti i principali endpoint privati suddivisi per categoria di operazione.
 
-**Iscrizione di un wallet** Un utente può registrare un wallet su FulgurHub mediante questo endpoint. Il tipo $Wallet$ contiene tutte le informazioni necessarie e viene passato come unico parametro http.
+**Iscrizione di un wallet** Un utente può registrare un wallet su FulgurHub mediante questo endpoint. Il tipo $Wallet$ contiene tutte le informazioni necessarie e viene passato come unico parametro http:
 #+begin_src javascript
 POST: /subscribe
 #+end_src
@@ -555,7 +560,7 @@ POST: /subscribe
 }
 #+end_src
 
-**Pagamento OnChain-OnChain** Come visto in capitolo \ref{analisi} i pagamenti OnChain-OnChain vengono gestiti dallo smart contract. Questo endpoint privato avvia il trasferimento eseguendo l'operazione $transfer$ dello smart contract.
+**Pagamento OnChain-OnChain** Come visto in capitolo \ref{analisi} i pagamenti OnChain-OnChain vengono gestiti dallo smart contract. Questo endpoint privato avvia il trasferimento eseguendo l'operazione $transfer$ dello smart contract:
 #+begin_src javascript
 POST: /transferOnChainOnChain
 #+end_src
@@ -567,7 +572,7 @@ I parametri necessari a eseguire questa operazione sono $recipientAddress$, ovve
 }
 #+end_src
 
-**Pagamento OffChain-OffChain** La prima fase di un pagamento OffChain-OffChain consiste nell'effettuare il detach di un token OffChain-OffChain, ovvero di un token che è stato staccato off-chain e che verrà attaccato off-chain. I parametri necessari a eseguire il detach sono $addressPayee$, ovvero l'indirizzo pubblico del pagato, $uriPayee$  l'indirizzo del server del pagato, $amount$ il quantitativo che si intende trasferire e $ttl$ il tempo di vita del token.
+**Pagamento OffChain-OffChain** La prima fase di un pagamento OffChain-OffChain consiste nell'effettuare il detach di un token OffChain-OffChain, ovvero di un token che è stato staccato off-chain e che verrà attaccato off-chain. I parametri necessari a eseguire il detach sono $addressPayee$, ovvero l'indirizzo pubblico del pagato, $uriPayee$  l'indirizzo del server del pagato, $amount$ il quantitativo che si intende trasferire e $ttl$ il tempo di vita del token:
 #+begin_src javascript
 POST: /detachOffChainTokenOffChain
 #+end_src
@@ -580,7 +585,7 @@ POST: /detachOffChainTokenOffChain
 }
 #+end_src
 
-Una volta ricevuta la proof of detachment dall'hub, essa può essere inviata al client mediante questo endpoint.
+Una volta ricevuta la proof of detachment dall'hub, essa può essere inviata al client mediante questo endpoint::
 #+begin_src javascript
 POST: /sendProofOfDetachment
 #+end_src
@@ -590,12 +595,12 @@ POST: /sendProofOfDetachment
 }
 #+end_src
 
-Il pagato recupera le proof of detachment ricevute mediante questo endpoint.
+Il pagato recupera le proof of detachment ricevute mediante questo endpoint:
 #+begin_src javascript
 POST: /popProofOfDetachment
 #+end_src
 
-Invia al client pagante la ricevuta di pagamento.
+e invia al client pagante la ricevuta di pagamento:
 #+begin_src javascript
 POST: /sendPaymentReceipt
 #+end_src
@@ -605,7 +610,7 @@ POST: /sendPaymentReceipt
 }
 #+end_src
 
-Questo endpoint permette al pagante di una transazione OffChain-OffChain di ribilanciare il canale. Con questo comando una transazione OffChain-OffChain viene considerata conclusa.
+Questo endpoint permette al pagante di una transazione OffChain-OffChain di ribilanciare il canale. Con questo comando una transazione OffChain-OffChain viene considerata conclusa:
 #+begin_src javascript
 POST: /settleOffChainOffChainTransfer
 #+end_src
@@ -615,7 +620,7 @@ POST: /settleOffChainOffChainTransfer
 }
 #+end_src
 
-**Pagamento OnChain-OffChain** Avvia un pagamento OnChain-OffChain. I parametri necessari sono gli stessi dell'endpoint $/detachOffChainTokenOffChain$.
+**Pagamento OnChain-OffChain** Avvia un pagamento OnChain-OffChain. I parametri necessari sono gli stessi dell'endpoint $/detachOffChainTokenOffChain$:
 #+begin_src javascript
 POST: /detachOnChainTokenOffChain
 #+end_src
@@ -628,7 +633,7 @@ POST: /detachOnChainTokenOffChain
 }
 #+end_src
 
-**Pagamento OffChain-OnChain** Avvia un pagamento di tipo OffChain-OnChain.
+**Pagamento OffChain-OnChain** Avvia un pagamento di tipo OffChain-OnChain:
 #+begin_src javascript
 POST: /detachOffChainTokenOnChain
 #+end_src
@@ -640,7 +645,7 @@ POST: /detachOffChainTokenOnChain
 }
 #+end_src
 
-**Incassare un token** Una volta ricevuto un off-chain token, questo può essere riscosso mediante questo endpoint privato. 
+**Incassare un token** Una volta ricevuto un off-chain token, questo può essere riscosso mediante questo endpoint: 
 #+begin_src javascript
 POST: /attachTokenOffChain
 #+end_src
@@ -650,7 +655,7 @@ POST: /attachTokenOffChain
 }
 #+end_src
 
-**Incassare un pending token** Un pending token può essere incassato durante il grace period del canale mediante questo endpoint. 
+**Incassare un pending token** Un pending token può essere incassato durante il grace period del canale mediante questo endpoint:
 #+begin_src javascript
 POST: /redeemToken
 #+end_src
@@ -663,14 +668,14 @@ POST: /redeemToken
 #+begin_src javascript
 POST: /retrievePaymentReceipt
 #+end_src
-Nel caso in cui il pagato non sia collaborativo un utente può richiedere una ricevuta di pagamento all'hub utilizzando questo endpoint.
+Nel caso in cui il pagato non sia collaborativo un utente può richiedere una ricevuta di pagamento all'hub utilizzando questo endpoint:
 #+begin_src javascript
 {
     clientAddress: string
 }
 #+end_src
 
-**Chiudere un canale** Avvia la chiusura del canale di pagamento. La chiusura avviene presentando in catena $latestPropose$, ovvero l'ultima propose concordata tra client e hub.
+**Chiudere un canale** Avvia la chiusura del canale di pagamento. La chiusura avviene presentando in catena $latestPropose$, ovvero l'ultima propose concordata tra client e hub:
 #+begin_src javascript
 POST: /close
 #+end_src
@@ -680,21 +685,30 @@ POST: /close
 }
 #+end_src
 
-**Finalizzare chiusura** Terminato il grace period, il client può effettuare il $withdraw$, finalizzando la chiusura del canale. Questo endpoint permette di eseguire questa operazione.
+**Finalizzare chiusura** Terminato il grace period, il client può effettuare il $withdraw$, finalizzando la chiusura del canale. Questo endpoint permette di eseguire questa operazione:
 #+begin_src javascript
 POST: /withdraw
 #+end_src
 
 ** Hub
 *** Responsabilità e requisiti
-Chiunque abbia abbastanza fondi on-chain può inizializzare un FulgurHub. Per fare questo occorre deployare il relativo smart contract e mantenere costantemente attivo il modulo descritto in questa sezione. L'hub è un modulo software molto simile al client. Le sue responsabilità riguardano: esecuzione di comandi pubblici, gestione di eventi asincroni e registrazione dei messaggi off-chain scambiati con gli utenti. I requisiti architetturali riguardano: performance, scalabilità e modificabilità.
+Chiunque abbia abbastanza fondi on-chain può inizializzare un FulgurHub. Per fare questo occorre deployare il relativo smart contract e mantenere costantemente attivo il modulo descritto in questa sezione. L'hub è un modulo software molto simile al client. Le sue responsabilità riguardano: 
+- **Esecuzione di comandi pubblici** Gli utente devono poter contattare l'hub eseguendo dei comandi pubblici.
+- **Gestione di eventi asincroni** L'hub deve poter gestire degli eventi asincroni. Nell specifico le notifiche generate dallo smart contract.
+- **Registrazione messaggi off-chain** Tutti i messaggi off-chain scambiati con gli utenti dell'hub devono poter essere memorizzati; essi infatti rappresentano delle prove di avvenuto pagamento che potrebbero dover essere presentate nel futuro in catena.
+
+I principali requisiti architetturali dell'hub sono i seguenti: 
+- **Performance** L'hub deve eseguire le singole operazioni velocemente; questo è essenziale specialmente nel caso in cui occorre gestire frequenti micropagamenti.
+- **Scalabilità** L'hub deve poter scalare orizzontalmente; questo significa che per far fronte a crescente numero di transazione basterà aggiungere dei nodi di calcolo.
+- **Modificabilità** La base di codice deve poter essere facilmente modificabile ed estensibile.
+
 *** Motivazioni tecnologiche
 
 **Gli endpoint pubblici** L'hub è un modulo passivo; questo significa che non contatta mai deliberatamente un utente, ma è quest'ultimo che passivamente riceve dei comandi dall'hub. Questi comandi vengono impartiti mediante degli endpoint http pubblici. Come nel client, il server http è stato implementato mediante Node.js; questo ha permesso di mantenere TypeScript come unico linguaggio di backend.
 
 **Il monitor** Come nel client anche nell'hub la gestione degli eventi asincroni è delegata a un modulo denominato monitor. Il modulo permette di agganciare a un evento un certo comportamento, senza cambiare il contenuto del monitor stesso. L'aggiunta o la rimozione degli eventi è rara, mentre invece la modifica del comportamento legato a un evento può cambiare frequentemente. Questo facilità l'estensione della gestione degli eventi, migliorando la modificabilità dell'architettura.
 
-**Database** Come descritto in capitolo \ref{analisi} l'hub riceve messaggi firmati dai client che deve memorizzare. Per la natura del protocollo di FulgurHub questi messaggi vengono frequentemente memorizzati e raramente letti. Il numero delle scritture può essere anche ingente. Per questo motivo si è deciso di utilizzare un database chiave valore; in particolare è stato utilizzato Redis, per il suo considerevole throughput in scrittura. Altro motivo per cui è stato adottato Redis rispetto a un altro database chiave-valore è rappresentato dalla possibilità di effettuare tuning delle sue qualità architetturali. In particolare il teorema CAP dice che un database può avere solo due tra queste caratteristiche contemporaneamente:
+**Database** Come descritto in capitolo \ref{analisi} l'hub riceve messaggi firmati dai client che deve memorizzare. Per la natura del protocollo di FulgurHub questi messaggi vengono frequentemente memorizzati e raramente letti. Il numero delle scritture può essere anche ingente. Per questo motivo si è deciso di utilizzare un database chiave valore, in particolare Redis, dato il suo considerevole throughput in scrittura [@Howfasti99]. Altro motivo per cui è stato adottato Redis rispetto a un altro database chiave-valore è rappresentato dalla possibilità di effettuare tuning delle sue qualità architetturali. In particolare il teorema CAP dice che un'architettura può avere solo due tra queste caratteristiche contemporaneamente:
 - Consistenza
 - Disponibilità
 - Sharding
@@ -705,7 +719,7 @@ Nel caso in cui si debba aumentare il numero di transazioni al secondo si potrà
 *** Dettagli implementativi
 Di seguito vengono descritti gli unici endpoint pubblici che mette a disposizione l'hub.
 
-**Ricezione di una propose** L'hub aggiorna lo stato off-chain di un canale di pagamento mediante la ricezione da parte dell'utente di una propose. Gli utenti possono inviare una propose mediante l'uso del seguente endpoint.
+**Ricezione di una propose** L'hub aggiorna lo stato off-chain di un canale di pagamento mediante la ricezione da parte dell'utente di una propose. Gli utenti possono inviare una propose mediante l'uso del seguente endpoint:
 #+begin_src javascript
 POST: /sendPropose
 #+end_src
@@ -715,7 +729,7 @@ POST: /sendPropose
 }
 #+end_src
 
-**Richiesta di ricevuta di pagamento** Quando in un pagamento OffChain-OffChain il pagato non è collaborativo, il pagante può richiedere la ricevuta di pagamento all'hub mediante questo endpoint.
+**Richiesta di ricevuta di pagamento** Quando in un pagamento OffChain-OffChain il pagato non è collaborativo, il pagante può richiedere la ricevuta di pagamento all'hub mediante questo endpoint:
 #+begin_src javascript
 POST: /retrievePaymentReceipt
 #+end_src
