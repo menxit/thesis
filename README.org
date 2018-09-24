@@ -206,7 +206,16 @@ Sebbene i canali di pagamento e gli IPC rappresentino un punto di svolta per la 
 * Analisi
 Questo capitolo descrive il processo di analisi svolto. In particolare in sezione \ref{obiettivi} si discutono gli obiettivi dell'analisi. In sezione \ref{descrizione-generale-dellarchitettura} si descrive l'architettura generale di FulgurHub. Infine in sezione \ref{casi-duso} si descrivono i principali casi d'uso e la gestione di eventuali eccezioni.
 ** Obiettivi
-**Dimostrazione di fattibilità** Un obiettivo di questa tesi è stato dimostrare la fattibilità del protocollo FulgurHub. In particolare ci si è concentrati sulle feature principali: apertura di un canale, pagamenti OnChain-OnChain, pagamenti OffChain-OffChain, pagamenti OffChain-OnChain, pagamenti OnChain-OffChain, prelievi a caldo, ricariche a caldo, chiusura di un canale e riscossione di pending token.
+**Dimostrazione di fattibilità** Un obiettivo di questa tesi è stato dimostrare la fattibilità del protocollo FulgurHub. In particolare ci si è concentrati sulle seguenti feature principali:
+
+- **Apertura di un canale** Chiunque può aprire un canale di pagamento con il FulgurHub.
+- **Pagamenti OnChain-OnChain** Riduce il balance on-chain del pagante e incrementa il balance on-chain del pagato.
+- **Pagamenti OffChain-OffChain** Riduce il balance off-chain del pagante e incrementa il balance off-chain del pagato.
+- **Pagamenti OffChain-OnChain** Riduce il balance off-chain del pagante e aumenta il balance on-chain del pagato.
+- **Pagamenti OnChain-OffChain** Riduce il balance on-chain del pagante e incrementa il balance off-chain del pagato.
+- **Prelievi a caldo** Permette a un utente del FulgurHub di effettuare un prelievo a caldo dei fondi off-chain senza chiudere il canale di pagamento.
+- **Ricariche a caldo** Permette a un utente del FulgurHub di ricaricare il balance off-chain di un canale di pagamento già aperto.
+- **Chiusura di un canale** Un utente del FulgurHub può chiudere il canale di pagamento ritirando i fondi relativi al balance off-chain, al balance on-chain e eventuali pending token non utilizzati.
 
 
 **Dimostrare la scalabilità architetturale** Come detto in capitolo \ref{background}, le motivazioni che hanno mosso la progettazione di FulgurHub riguardano i limiti architetturali di scalabilità della blockchain. Obiettivo di questa tesi è stato anche dimostrare la scalabilità architetturale di FulgurHub.
@@ -443,7 +452,20 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 \end{aligned}
 \end{equation}
 
-Alice presenta $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ in catena eseguendo la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$.
+Alice presenta $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ in catena eseguendo la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Un diagramma delle interazioni viene fornito in figura [[caso-duso-prelievo-a-caldo]].
+
+#+begin_src plantuml :file caso-duso-prelievo-a-caldo.png
+skinparam dpi 200
+Alice -> Hub: <latex>\tiny{\phi^{\sigma_A}_{i+1}}</latex>
+Hub -> Alice: <latex>\tiny{\phi^{\sigma_A,\sigma_H}_{i+1}, \tau^{\sigma_A,\sigma_H}_{y, \alpha_A}}</latex>
+Alice -> Smartcontract: <latex>\tiny {attach <\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}>}</latex>
+#+end_src
+
+#+CAPTION: Prelievo a caldo in FulgurHub.
+#+LABEL: caso-duso-prelievo-a-caldo
+#+ATTR_HTML: :width 50% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-prelievo-a-caldo.png]]
 
 *** Ricarica a caldo
 Effettuare una ricarica a caldo significa spostare $\nu$ fondi dal balance on-chain di Alice $\overline{\beta^A}$ a quello off-chain $\beta^A_i$.
@@ -453,7 +475,7 @@ a) $\{\alpha^A\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
-**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract passando come parametri $\alpha_A$ e $\nu$. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}+\nu$. Una volta terminata l'esecuzione della funzione, lo smart contract invia all'hub e ad Alice la relativa PoD. Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ controfirmati.
+**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract passando come parametri $\alpha_A$ e $\nu$. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}+\nu$. Una volta terminata l'esecuzione della funzione, lo smart contract invia all'hub e ad Alice la relativa PoD. Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ controfirmati. Un diagramma del protocollo viene fornito in figura [[caso-duso-ricarica-a-caldo]].
 
 \begin{equation}
 \begin{aligned}
@@ -463,12 +485,38 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 \end{aligned}
 \end{equation}
 
+#+begin_src plantuml :file caso-duso-ricarica-a-caldo.png
+skinparam dpi 200
+Alice -> Smartcontract: <latex>\tiny{detach <\alpha_A, \nu>}</latex>
+Alice -> Hub: <latex>\tiny {\phi^{\sigma_A}_{i+1}, \tau^{\sigma_A}_{y, \alpha_A}}}</latex>
+Hub -> Alice: <latex>\tiny {\phi^{\sigma_A,\sigma_H}_{i+1}, \tau^{\sigma_A,\sigma_H}_{y, \alpha_A}}</latex>
+#+end_src
+
+#+CAPTION: Ricarica a caldo in FulgurHub.
+#+LABEL: caso-duso-ricarica-a-caldo
+#+ATTR_HTML: :width 90% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-ricarica-a-caldo.png]]
+
 *** Chiusura di un canale
 **Precondizioni** \\
 a) $\{\alpha^A\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$
 
 **Descrizione delle interazioni** Alice porta in catena l'ultima propose $\phi^A_i$ con la funzione close dello smart contract. Lo smart contract registra la richiesta di chiusura del canale e avvia un timer di durata pari a una costante $G$ dello smart contract, detta grace period. Scaduto il timer, Alice può ritirare tutti i suoi fondi $\overline{\beta^A}+\beta^A_{i}$ eseguendo la funzione withdraw dello smart contract.
+
+
+#+begin_src plantuml :file caso-duso-chiusura-canale.png
+skinparam dpi 200
+Alice -> Smartcontract: <latex>\tiny{close <\phi^A_i>}</latex>
+Alice -> Smartcontract: <latex>\tiny {withdraw}</latex>
+#+end_src
+
+#+CAPTION: Chiusura canale in FulgurHub.
+#+LABEL: caso-duso-chiusura-canale
+#+ATTR_HTML: :width 40% :placement [!htb]
+#+RESULTS:
+[[file:caso-duso-chiusura-canale.png]]
 
 *** Riscossione di un pending token
 Un client può riscuotere dei pending token, ovvero dei token non ancora scaduti o utilizzati, durante il grace period.
@@ -486,10 +534,10 @@ Questo capitolo descrive responsabilità, requisiti, motivazioni tecnologiche e 
 
 ** Smart contract
 *** Responsabilità e requisiti 
-Lo smart contract è il punto di contatto tra lo stato off-chain e quello on-chain. Lo stato on-chain si basa su una mappa ti tipo $indirizzo \rightarrow Wallet$. Un Wallet è una struttura dati che gestisce tutte le informazioni on-chain di un utente iscritto all'hub:
+Lo smart contract è il punto di contatto tra lo stato off-chain e quello on-chain di FulgurHub. Lo stato on-chain si basa su una mappa ti tipo $indirizzo \rightarrow Wallet$. Un Wallet è una struttura dati che gestisce tutte le informazioni on-chain di un utente iscritto all'hub:
 - **Balance on-chain** Ovvero il balance dell'utente registrato sulla blockchain.
 - **PoDs** La lista di token che sono stati staccati in catena.
-- **PoAs** La lista di token che sono stati attaccati in catena. Questo come spiegato in capitolo \ref{analisi} serve a evitare il problema della doppia spesa di un token.
+- **PoAs** La lista di token che sono stati attaccati in catena. Memorizzare la lista di proof of attachmente permette di evitare il problema della doppia spesa, come già spiegato in capitolo \ref{analisi}.
 - **Timestamp chiusura** La chiusura del canale avviene in due fasi. Richiesta di chiusura e finalizzazione. La finalizzazione può avvenire solo allo scadere di un timer pari a un tempo denominato grace period. Per effettuare questa verifica si memorizza il timestamp di chiusura del canale.
 
 Un utente dell'hub che vuole interagire con il suo stato on-chain può farlo eseguendo una delle operazioni messe a disposizione. Queste operazioni riguardano l'iscrizione all'hub, i pagamenti ibridi, la chiusura di un wallet e la riscossione di pending token. Oltre a questo lo smart contract mette a disposizione degli eventi. Gli eventi sono dei messaggi che possono essere pubblicati nel momento in cui una qualche funzionalità viene eseguita. Questi eventi sono pubblici e chiunque può mettercisi in ascolto. Di seguito gli eventi messi a disposizione:
