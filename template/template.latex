@@ -273,6 +273,8 @@ $if(frontespizio)$
 }
 $endif$
 
+\newpage
+
 \newcommand{\generaDedica}{
    \thispagestyle{empty}
    \null\vspace{\stretch{1}}

@@ -1,4 +1,4 @@
-#+PANDOC_OPTIONS: standalone:t pdf-engine:pdflatex
+#+PANDOC_OPTIONS: standalone:t pdf-engine:xelatex
 #+PANDOC_VARIABLES: lang:it
 #+PANDOC_VARIABLES: frontespizio:true
 #+PANDOC_VARIABLES: "facolta:Facoltà di Ingegneria"
@@ -15,7 +15,7 @@
 #+PANDOC_VARIABLES: lot:true
 #+PANDOC_VARIABLES: documentclass:book
 #+PANDOC_VARIABLES: fontsize:12pt
-#+PANDOC_VARIABLES: linestretch:1.25
+#+PANDOC_VARIABLES: linestretch:1.3
 #+PANDOC_VARIABLES: toc:true
 #+PANDOC_VARIABLES: biblio-title:Bibliografia
 #+PANDOC_OPTIONS: bibliography:bibliography.bib
@@ -87,7 +87,7 @@ Alice -> (Smart contract [INIT]): Deploy
 #+end_src
 
 #+CAPTION: Deploy on-chain dello smart contract di un payment channel.
-#+ATTR_HTML: :width 60% :placement [!htb]
+#+ATTR_HTML: :width 75% :placement [!htb]
 #+RESULTS:
 [[file:deploy_payment_channel.png]]
 
@@ -100,7 +100,7 @@ Alice -> (Smart contract [OPENED]): Apertura e deposito fondi
 #+end_src
 
 #+CAPTION: Apertura e deposito fondi on-chain in un payment channel.
-#+ATTR_HTML: :width 70% :placement [!htb]
+#+ATTR_HTML: :width 100% :placement [!htb]
 #+RESULTS:
 [[file:apertura_payment_channel.png]]
 
@@ -114,7 +114,7 @@ Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
 #+end_src
 
 #+CAPTION: Join e deposito fondi on-chain in un payment channel.
-#+ATTR_HTML: :width 45% :placement [!htb]
+#+ATTR_HTML: :width 65% :placement [!htb]
 #+RESULTS:
 [[file:join_payment_channel.png]]
 
@@ -227,7 +227,7 @@ Dario -left-> (FulgurHub)
 
 #+CAPTION: Architettura hub-and-spoke di FulgurHub
 #+LABEL: architecture-hub-and-spoke
-#+ATTR_HTML: :width 55% :placement [!htb]
+#+ATTR_HTML: :width 75% :placement [!htb]
 #+RESULTS:
 [[file:hub-and-spoke-architecture.png]]
 
@@ -710,7 +710,7 @@ I principali requisiti architetturali dell'hub sono i seguenti:
 **Database** Come descritto in capitolo \ref{analisi} l'hub riceve messaggi firmati dai client che deve memorizzare. Per la natura del protocollo di FulgurHub questi messaggi vengono frequentemente memorizzati e raramente letti. Il numero delle scritture può essere anche ingente. Per questo motivo si è deciso di utilizzare un database chiave valore, in particolare Redis, dato il suo considerevole throughput in scrittura [@Howfasti99]. Altro motivo per cui è stato adottato Redis rispetto a un altro database chiave-valore è rappresentato dalla possibilità di effettuare tuning delle sue qualità architetturali. In particolare il teorema CAP dice che un'architettura può avere solo due tra queste caratteristiche contemporaneamente:
 - Consistenza
 - Disponibilità
-- Sharding
+- Partizionamento
 
 Redis permette di scegliere quali di queste due caratteristiche avere. In una prima fase di un FulgurHub ha senso scegliere solamente la consistenza e la disponibilità. Sebbene un requisito essenziale dell'architettura sia la scalabilità, una singola istanza Redis su commodity hardware garantisce un throughput ampiamente sufficiente [@Howfasti99]. 
 
@@ -739,39 +739,303 @@ POST: /retrievePaymentReceipt
 #+end_src
 
 * Prove sperimentali
+Questo capitolo discute le prove sperimentali condotte sull'implementazione di FulgurHub. In particolare in sezione \ref{gli-obiettivi} si discutono gli obiettivi, in sezione \ref{lapproccio-adottato} l'approccio adottato, in sezione \ref{throughput-del-client} si mostrano i risultati relativi al client, in sezione \ref{throughput-dellhub} si discutono i risultati dell'hub, in sezione \ref{profiling} viene descritto il profiling dell'operazione di pagamento OffChain-OffChain e infine in sezione \ref{considerazioni} si fanno delle considerazioni generali sui risultati ottenuti in termini di performance e scalabilità.
 ** Gli obiettivi
-**Verifica performance**
+**Verifica performance** Un obiettivo delle prove sperimentali è stato verificare le performance dell'architettura; in particolare l'analisi del throughput di client e server relativamente ai pagamenti OffChain-OffChain. Sebbene siano state implementate anche altre tipologie di pagamento (OffChain-OnChain, OnChain-OffChain e OnChain-OnChain) si è preferito non effettuare prove di performance di tutte le operazioni che interagiscono con la catena. Il throughput delle operazioni che interagiscono con la catena sarebbe limitato superiormente dal throughput della blockchain di riferimento. In questo contesto con throughput si intende il numero di transazioni completate in un secondo.
 
-**Verifica scalabilità architetturale**
+**Profiling** Altro obiettivo delle prove sperimentali è stato la profiling dei pagamenti OffChain-OffChain; come visto in capitolo \ref{analisi}, un pagamento OffChain-OffChain è costituito da un insieme di sotto task; la durata di ciascun sotto task è stata profilata, con l'intento di trovare eventuali colli di bottiglia e di capire quale sia la distribuzione delle operazioni nel tempo.
 
 ** L'approccio adottato
-**Benchmark server**
+**Benchmark server** Eseguire un test delle performance di FulgurHub richiede il setup di un ambiente complesso e distribuito. In particolare ciascun client e hub dovrebbe risiede su un nodo di calcolo dedicato. A tale scopo è stato realizzato un benchmark server. Il benchmark server permette di automatizzare il setup dell'ambiente di test e di eseguire dei performance test parametrizzati. L'esecuzione delle operazioni avviene mediante chiamate http. Di seguito si descrivono i comandi messi a disposizione dal server.
 
-**Docker swarm**
+Questo endpoint permette di effettuare il setup dell'ambiente di test, in particolare vengono deployati i seguenti servizi:
+- **Redis** Un'istanza di Redis viene deployata. Essa rappresenta il database dell'hub.
+- **Hub** Con hub si intende il server dell'hub. Anch'esso viene deployato su un nodo dedicato.
+- **Client** Ciascun client viene deployato su un nodo dedicato. Il numero di client da deployare viene specificato mediante il parametro $numberOfClients$.
+- **Ganache** Una blockchain di test deve essere deployata per supportare le operazioni on-chain necessarie come la sottoscrizione dell'hub. A tale scopo è stato utilizzato ganache.
+#+begin_src javascript
+POST: /environment
+#+end_src
+#+begin_src javascript
+{
+    numberOfClients: Number
+}
+#+end_src 
 
-**Transazioni seriali**
+Per cancellare l'ambiente di test un comando dedicato viene messo a disposizione:
+#+begin_src javascript
+DELETE: /environment
+#+end_src
 
-**Transazioni concorrenti**
+Mediante il seguente comando è possibile eseguire un benchmark relativo ai pagamenti OffChain-OffChain; è possibile specificare due parametri: $concurrent$ e $requests$. $concurrent$ indica il numero di coppie di utenti che devono scambiare dei pagamenti in maniera concorrente. $requests$ indica quanti pagamenti deve eseguire ciascuna coppia di utenti. 
+#+begin_src javascript
+POST: /benchmark/transfer/offchain/offchain
+#+end_src
+#+begin_src javascript
+{
+    concurrent: Number,
+    requests: Number
+}
+#+end_src
 
-**Simulazione della latenza di rete**
+ **Docker** Ciascun nodo dell'ambiente di test è stato deployato su un container LXC. In particolare il benchmark server utilizza le API di Docker, per costruire e distruggere i container di cui necessita. L'uso di nodi virtualizzati rispetto a nodi fisici reali ha vari vantaggi: tra cui l'abbattimento dei costi e dei tempi di sviluppo e la possibilità di aumentare o diminuire le risorse hardware dedicate di ciascun container modificandone la configurazione. D'altra parte la virtualizzazione non permette di tenere conto della latenza di rete.
 
-** Il throughput lato client
-**Al variare della RAM**
+**Simulazione della latenza di rete** Come detto nel precedente paragrafo, la virtualizzazione non permette di tenere conto della latenza di rete. Per questo motivo in fase di test è stata simulata ritardando di un fattore delta le comunicazioni remote.
 
-**Al variare della CPU**
+** Throughput del client
+Con throughput del client si intende il numero di pagamenti al secondo confermati che un singolo utente può effettuare. Esso è stato verificato sia al variare della RAM che della latenza. Il client è realizzato in Node.js, questo significa che viene eseguito un unico processo senza alcun thread di supporto; per questo motivo non sono state effettuate delle prove sperimentali al variare del numero di core a disposizione.
 
-**Al variare della latenza**
-** Il throughput lato hub
-**Al variare della RAM**
+**Al variare della RAM** Questo test è stato effettuato variando il quantitativo di RAM assegnato ai nodi del client e senza variare quella dedicata all'hub. Come è possibile verificare dai dati in tabella e dal grafico in figura [[client-ram-chart]] il client raggiunge il throughput massimo con un 1 o 2 GB di RAM.
 
-**Al variare della CPU**
 
-**Al variare della latenza**
+#+CAPTION: Throughput client al variare della RAM.
+#+LABEL: client_ram
+#+tblname: client-ram-table
+| N° | RAM   | Throughput (tx/s) |
+|----+-------+-------------------|
+|  1 | 500MB |                13 |
+|  2 | 1GB   |                32 |
+|  3 | 2GB   |                41 |
+
+#+begin_src gnuplot :var data=client-ram-table :file chart_client_ram.png
+reset
+
+set boxwidth 1
+set yrange [0:45]
+set xtics scale 1,1
+set nokey 
+
+set style fill solid
+
+set style line 1 lc rgb "#FFEB3B"
+set style line 2 lc rgb "#FFC107"
+set style line 3 lc rgb "#FF9800"
+set style line 4 lc rgb "#FF5722"
+
+plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
+     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
+     data every ::2::2 using 1:3:xtic(2) with boxes ls 3
+#+end_src
+
+#+CAPTION: Throughput client al variare della RAM
+#+LABEL: client-ram-chart
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:chart_client_ram.png]]
+
+**Al variare della latenza** I test sulla latenza sono stati eseguiti fissando la RAM di tutti i nodi a 2GB e simulando un ritardo tra tutte le connessioni remote instaurate. Come è possibile notare in figura [[client-latenza-chart]] la latenza incide in maniera direttamente proporzionale sul throughput del client.
+
+#+CAPTION: Throughput client al variare della latenza.
+#+LABEL: client_latenza
+#+tblname: client-latenza-table
+| N° | Ritardo simulato (s) | Throughput (tx/s) |
+|----+----------------------+-------------------|
+|  1 |                    0 |                43 |
+|  2 |                  0.5 |                22 |
+|  3 |                    1 |              13.5 |
+|  4 |                    2 |                 7 |
+|  5 |                   10 |               1.4 |
+
+#+begin_src gnuplot :var data=client-latenza-table :file chart_client_latenza.png
+reset
+
+set boxwidth 1
+set yrange [0:45]
+set xtics scale 1,1
+set nokey 
+
+set style fill solid
+
+set style line 1 lc rgb "#FFEB3B"
+set style line 2 lc rgb "#FFC107"
+set style line 3 lc rgb "#FF9800"
+set style line 4 lc rgb "#FF5722"
+set style line 5 lc rgb "#c0392b"
+
+plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
+     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
+     data every ::2::2 using 1:3:xtic(2) with boxes ls 3, \
+     data every ::3::3 using 1:3:xtic(2) with boxes ls 4, \
+     data every ::4::4 using 1:3:xtic(2) with boxes ls 5
+#+end_src
+
+#+CAPTION: Barchart throughput client al variare della latenza.
+#+LABEL: client-latenza-chart
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:chart_client_latenza.png]]
+
+** Throughput dell'hub
+Con throughput dell'hub si intende il numero di pagamenti concorrenti al secondo confermati che un singolo hub può gestire. Esso è stato verificato sia al variare della RAM che della latenza. Anche l'hu come il client è realizzato in Node.js, questo significa che viene eseguito un unico processo senza alcun thread di supporto; per questo motivo non sono state effettuate delle prove sperimentali al variare del numero di core a disposizione.
+
+**Al variare della RAM** Il test è stato effettuato variando il quantitativo di RAM assegnata all'hub. Come è possibile verificare dal grafico in figura [[hub-ram-chart]] l'hub raggiunge il throughput massimo con un 1 o 2 GB di RAM. In particolare su un nodo di calcolo con 500MB di RAM il numero di transazioni completate al secondo è pari a 45. Aumentando la RAM a 1GB il throughput quasi raddoppia, raggiungendo 84 transazioni al secondo.
+
+#+CAPTION: Throughput hub al variare della RAM.
+#+LABEL: hub_ram
+#+tblname: hub-ram-table
+| N° | RAM   | Throughput (tx/s) |
+|----+-------+-------------------|
+|  1 | 500MB |                45 |
+|  2 | 1GB   |                84 |
+|  3 | 2GB   |                84 |
+
+#+begin_src gnuplot :var data=hub-ram-table :file chart_hub_ram.png
+reset
+
+set boxwidth 1
+set yrange [0:100]
+set xtics scale 1,1
+set nokey 
+
+set style fill solid
+
+set style line 1 lc rgb "#FFEB3B"
+set style line 2 lc rgb "#FFC107"
+set style line 3 lc rgb "#FF9800"
+set style line 4 lc rgb "#FF5722"
+
+plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
+     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
+     data every ::2::2 using 1:3:xtic(2) with boxes ls 3, \
+     data every ::3::3 using 1:3:xtic(2) with boxes ls 4
+#+end_src
+
+#+CAPTION: Barchart throughput hub al variare della RAM
+#+LABEL: hub-ram-chart
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:chart_hub_ram.png]]
+
+**Al variare della latenza** I test sulla latenza relativi all'hub sono stati effettuati fissando a 2GB la RAM di tutti i nodi e simulando un ritardo tra tutte le connessioni remote instaurate. Come è possibile notare in figura [[hub-latenza-chart]], la latenza incide in maniera direttamente proporzionale sul throughput del client.
+
+#+CAPTION: Throughput hub al variare della latenza.
+#+LABEL: hub_latenza
+#+tblname: hub-latenza-table
+| N° | Latenza (s) | Throughput (tx/s) |
+|----+-------------+-------------------|
+|  1 |           0 |                84 |
+|  2 |         0.5 |                43 |
+|  3 |           1 |                21 |
+|  4 |           2 |                13 |
+|  5 |          10 |                 2 |
+
+#+begin_src gnuplot :var data=client-latenza-table :file chart_hub_latenza.png
+reset
+
+set boxwidth 1
+set yrange [0:45]
+set xtics scale 1,1
+set nokey 
+
+set style fill solid
+
+set style line 1 lc rgb "#FFEB3B"
+set style line 2 lc rgb "#FFC107"
+set style line 3 lc rgb "#FF9800"
+set style line 4 lc rgb "#FF5722"
+
+plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
+     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
+     data every ::2::2 using 1:3:xtic(2) with boxes ls 3, \
+     data every ::3::3 using 1:3:xtic(2) with boxes ls 4
+#+end_src
+
+#+CAPTION: Barchart throughput hub al variare della latenza.
+#+LABEL: hub-latenza-chart
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:chart_hub_latenza.png]]
+** Profiling
+Come visto nel capitolo \ref{analisi} un pagamento OffChain-OffChain per essere considerato concluso richiede lo scambio di un certo quantitativo di messaggi, vedi figura [[profiling-messaggi-offchain]]. In sezione \ref{throughput-del-client} si è visto che su una macchina con 2GB di RAM un client riesce a completare fino a 41 pagamenti al secondo; quindi un pagamento viene completato in circa 24ms. 
+
+#+begin_src plantuml :file profilazione-caso-duso-offchain-offchain.png
+skinparam dpi 200
+Alice -> Hub: 1) Detach del token
+Alice -> Berto: 2) Invio della PoA
+Berto -> Hub: 3) Attach del token
+Berto -> Alice: 4) Ricevuta di pagamento
+Alice -> Hub: 5) Propose di settlement
+#+end_src
+
+#+CAPTION: Pagamento OffChain-OffChain in FulgurHub.
+#+LABEL: profiling-messaggi-offchain
+#+ATTR_HTML: :width 80% :placement [!htb]
+#+RESULTS:
+[[file:profilazione-caso-duso-offchain-offchain.png]]
+
+Rispetto alle operazioni indicate in figura [[profiling-messaggi-offchain]], la loro distribuzione nel tempo è indicata nel diagramma in figura [[profiling-offchain]].
+
+#+begin_src plantuml :file profiling.png
+skinparam dpi 200
+robust "Pagamento OffChain-OffChain" as WU
+
+@0
+WU is "Detach del token"
+
+@6
+WU is "Invio della PoA"
+
+@8
+WU is "Attach del token"
+
+@16
+WU is "Ricevuta di pagamento"
+
+@18
+WU is "Settlement"
+
+@24
+WU is "Pagamento confermato"
+#+end_src
+
+#+CAPTION: Profiling pagamento OffChain-OffChain
+#+LABEL: profiling-offchain
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:profiling.png]]
+
+Come è possibile notare dalla figura [[profiling-offchain]] le operazioni più onerose risultano essere il detach del token, l'attach del token e l'invio della propose di settlement, ovvero tutte le operazioni che richiedono la firma di un messaggio. Questo risultato è quello aspettato, infatti la firma crittografica richiede un lavoro computazionale maggiore rispetto alla lettura e invio di un messaggio. Node.js dal punto di vista dell'ottimizzazione di operazioni computazionali onerose non è la tecnologia adatta, data la sua natura single thread; per questo motivo la firma dei messaggi è delegata a un modulo software dedicato e ottimizzato scritto in C basato sulle N-API di Node.js.
+
 ** Considerazioni
-**Performance e rete**
+Sulla base dei dati presentati nelle precedenti sezioni, si discutono i risultati in termini di performance e di scalabilità.
 
-**Scalabilità dell'hub**
+**Performance** Su un singolo nodo con hardware adeguato, l'implementazione di FulgurHub presentata in questa tesi può arrivare a gestire fino a 84 transazioni al secondo. In figura [[fulgurhub_confronto_chart]] si confronta il throughput di FulgurHub con quello delle principali blockchain. Come è possibile notare FulgurHub permette di ottenere un throughput 5 volte maggiore rispetto a quello della blockchain sottostante (Ethereum) e di decuplicare quello relativo all'attuale implementazione di BitCoin.
 
+#+CAPTION: Throughput FulgurHub a confronto con le principali blockchain.
+#+LABEL: fulgurhub_confronto
+#+tblname: fulgurhub-confronto
+| N° | Tecnologia | Throughput (tx/s) |
+|----+------------+-------------------|
+|  1 | BitCoin    |                 7 |
+|  2 | Ethereum   |                15 |
+|  3 | FulgurHub  |                84 |
+
+#+begin_src gnuplot :var data=fulgurhub-confronto :file fulgurhub_confronto.png
+reset
+
+set boxwidth 1
+set yrange [0:100]
+set xtics scale 1,1
+set nokey 
+
+set style fill solid
+
+set style line 1 lc rgb "#FFEB3B"
+set style line 2 lc rgb "#FFC107"
+set style line 3 lc rgb "#FF9800"
+
+plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
+     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
+     data every ::2::2 using 1:3:xtic(2) with boxes ls 3
+#+end_src
+
+#+CAPTION: FulgurHub a confronto con tecnologie alternative
+#+LABEL: fulgurhub_confronto_chart
+#+ATTR_HTML: :width 100% :placement [!htb]
+#+RESULTS:
+[[file:fulgurhub_confronto.png]]
+
+**Scalabilità dell'hub** Un singolo nodo di FulgurHub permette di ottenere un throughput sensibilmente maggiore rispetto a quello delle principali blockchain. Oltre a questo l'hub è un modulo stateless, ovvero il singolo nodo hardware non ha uno stato; lo stato dell'hub infatti è memorizzato su un database dedicato (Redis); questa caratteristica permette di replicarlo senza particolari difficoltà. Con una configurazione adeguata, basata su un load balancer che distribuisca le richieste su più istanze, il numero di transazioni gestite dall'hub può scalare linearmente, in maniera direttamente proporzionale al numero di nodi.
 * Conclusioni e sviluppi futuri
 **Autogestione finanziaria**
 
