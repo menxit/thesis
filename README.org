@@ -208,14 +208,14 @@ Questo capitolo descrive il processo di analisi svolto. In particolare in sezion
 ** Obiettivi
 **Dimostrazione di fattibilità** Un obiettivo di questa tesi è stato dimostrare la fattibilità del protocollo FulgurHub. In particolare ci si è concentrati sulle seguenti feature principali:
 
-**Apertura di un canale** Chiunque può aprire un canale di pagamento con il FulgurHub.
-**Pagamenti OnChain-OnChain** Riduce il balance on-chain del pagante e incrementa il balance on-chain del pagato.
-**Pagamenti OffChain-OffChain** Riduce il balance off-chain del pagante e incrementa il balance off-chain del pagato.
-**Pagamenti OffChain-OnChain** Riduce il balance off-chain del pagante e aumenta il balance on-chain del pagato.
-**Pagamenti OnChain-OffChain** Riduce il balance on-chain del pagante e incrementa il balance off-chain del pagato.
-**Prelievi a caldo** Permette a un utente del FulgurHub di effettuare un prelievo a caldo dei fondi off-chain senza chiudere il canale di pagamento.
-**Ricariche a caldo** Permette a un utente del FulgurHub di ricaricare il balance off-chain di un canale di pagamento già aperto.
-**Chiusura di un canale** Un utente del FulgurHub può chiudere il canale di pagamento ritirando i fondi relativi al balance off-chain, al balance on-chain e eventuali pending token non utilizzati.
+- **Apertura di un canale** Chiunque può aprire un canale di pagamento con il FulgurHub.
+- **Pagamenti OnChain-OnChain** Riduce il balance on-chain del pagante e incrementa il balance on-chain del pagato.
+- **Pagamenti OffChain-OffChain** Riduce il balance off-chain del pagante e incrementa il balance off-chain del pagato.
+- **Pagamenti OffChain-OnChain** Riduce il balance off-chain del pagante e aumenta il balance on-chain del pagato.
+- **Pagamenti OnChain-OffChain** Riduce il balance on-chain del pagante e incrementa il balance off-chain del pagato.
+- **Prelievi a caldo** Permette a un utente del FulgurHub di effettuare un prelievo a caldo dei fondi off-chain senza chiudere il canale di pagamento.
+- **Ricariche a caldo** Permette a un utente del FulgurHub di ricaricare il balance off-chain di un canale di pagamento già aperto.
+- **Chiusura di un canale** Un utente del FulgurHub può chiudere il canale di pagamento ritirando i fondi relativi al balance off-chain, al balance on-chain e eventuali pending token non utilizzati.
 
 
 **Dimostrare la scalabilità architetturale** Come detto in capitolo \ref{background}, le motivazioni che hanno mosso la progettazione di FulgurHub riguardano i limiti architetturali di scalabilità della blockchain. Obiettivo di questa tesi è stato anche dimostrare la scalabilità architetturale di FulgurHub.

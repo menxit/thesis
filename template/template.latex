@@ -33,7 +33,7 @@ $endif$
   \fi
   \defaultfontfeatures{Ligatures=TeX,Scale=MatchLowercase}
 $for(fontfamilies)$
-  \newfontfamily{$fontfamilies.name$}[$fontfamilies.options$]{$fontfamilies.font$}
+  \newfontfamily\myfont{Times New Roman}
 $endfor$
 $if(euro)$
   \newcommand{\euro}{€}
@@ -306,24 +306,14 @@ Inoltre ringrazio tutti i miei compagni di studio, in particolare Alessio, Anton
 E infine ringrazio Sara, che mi fa sentire importante anche se non conto niente.
 }
 
-$if(toc)$
-{
-$if(colorlinks)$
-\hypersetup{linkcolor=$if(toccolor)$$toccolor$$else$black$endif$}
-$endif$    
 \setcounter{tocdepth}{$toc-depth$}
 \tableofcontents
-}
-$endif$
 
-$if(lot)$
 \counterwithout{table}{chapter}
 \listoftables
-$endif$
-$if(lof)$
+
 \counterwithout{figure}{chapter}
 \listoffigures
-$endif$
 
 \counterwithout{equation}{chapter}
 
