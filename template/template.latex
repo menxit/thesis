@@ -1,4 +1,5 @@
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(papersize)$$papersize$paper,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
+
 \usepackage[utf8]{inputenc} 
 \usepackage{graphicx}
 \usepackage{svg}
@@ -92,9 +93,8 @@ $endif$
 $if(verbatim-in-note)$
 \VerbatimFootnotes % allows verbatim text in footnotes
 $endif$
-$if(geometry)$
-\usepackage[$for(geometry)$$geometry$$sep$,$endfor$]{geometry}
-$endif$
+
+
 $if(lang)$
 \ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
   \usepackage[shorthands=off,$for(babel-otherlangs)$$babel-otherlangs$,$endfor$main=$babel-lang$]{babel}
@@ -221,6 +221,13 @@ $if(institute)$
 $endif$
 \date{$date$}
 
+\usepackage[
+  top=5cm,
+  bottom=5cm,
+  left=4cm,
+  right=4cm,
+]{geometry}
+
 \begin{document}
 $if(title)$
 \maketitle
@@ -284,6 +291,21 @@ $if(dedica)$
 }
 $endif$
 
+\chapter*{Ringraziamenti}
+\small{
+Grazie a tutti i professori che ho avuto il piacere di conoscere in questi ultimi 5 anni, in particolare il Professor Alberto Paoluzzi, Relatore di questa tesi.
+
+Ridurre in parole i ringraziamenti che meriterebbe l'Ing. Federico Spini, Correlatore di questa tesi non è facile. Federico non si è limitato a guidarmi e consigliarmi, ma ha saputo trasmettermi l'importanza di un metodo educativo basato su un percorso di consapevolezza dialettico.
+
+Ancora è difficile capacitarsi della fortuna avuta nell'incontrare una persona come Marco; ringrazio il mio Amico per avere reso così interessanti le ore di studio e per avermi mostrato la verità lapalissiana celata da una distribuzione di Poisson.
+
+Zattera tra gli impervi mari della vita, questo per me sono sempre stati i miei genitori, che in queste righe ringrazio per non essersi mai stancati di indicarmi il nord.
+
+Inoltre ringrazio tutti i miei compagni di studio, in particolare Alessio, Antonio, Claudia e Lorenzo grazie ai quali questo percorso è stato ancora più divertente.
+
+E infine ringrazio Sara, che mi fa sentire importante anche se non conto niente.
+}
+
 $if(toc)$
 {
 $if(colorlinks)$
@@ -304,6 +326,7 @@ $if(lof)$
 $endif$
 
 \counterwithout{equation}{chapter}
+
 
 $body$
 
