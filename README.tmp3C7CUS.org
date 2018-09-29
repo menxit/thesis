@@ -1,3 +1,6 @@
+# Created 2018-09-29 Sat 10:09
+#+TITLE: 
+#+AUTHOR: menxit
 #+PANDOC_OPTIONS: standalone:t pdf-engine:lualatex
 #+PANDOC_VARIABLES: lang:it
 #+PANDOC_VARIABLES: fontsize:12pt
@@ -95,52 +98,34 @@ Un payment channel è una particolare tipologia di state channel. I messaggi sca
 
 **Deploy** Il deploy è la prima fase di inizializzazione. Alice deploya lo smart contract del relativo canale. L'operazione di deployment è richiesta per ciascun singolo payment channel. Questa fase permette di ottenere l'indirizzo di un smart contract, che nelle successive fasi verrà adottato per richiamare le operazioni on-chain che si intende richiamare; ad esempio l'invio di un aggiornamento del deposito di stato off-chain. In questa fase lo stato on-chain del payment channel è detto $INIT$. Nella fase $INIT$ lo smart contract permette di eseguire esclusivamente l'operazione di apertura del canale da parte di Alice.
 
-#+begin_src plantuml :file deploy_payment_channel.png
-skinparam dpi 300
-Alice -> (Smart contract [INIT]): Deploy
-:Berto:
-#+end_src
-
 #+CAPTION: Deploy on-chain dello smart contract di un payment channel.
 #+ATTR_HTML: :width 75% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:deploy_payment_channel.png]]
 
 **Apertura** Alice apre il canale e blocca un quantitativo arbitrario di fondi all’interno dello smart contract. Questi fondi rappresentano il bilancio iniziale di Alice. Si fa notare come la fase di deploy e di apertura possano essere svolte con un'unica operazione, risparmiando in termini di transazioni on-chain. Oltre a depositare i fondi, Alice con questa operazione porta in catena il suo indirizzo ip e l'indirizzo ethereum di Berto. Terminata la procedura, lo stato on-chain del canale diventa $OPENED$. Nello stato $OPENED$, lo smart contract accetta esclusivamente l'esecuzione dell'operazione $join$ da parte di Berto.
 
-#+begin_src plantuml :file apertura_payment_channel.png
-skinparam dpi 300
-Alice -> (Smart contract [OPENED]): Apertura e deposito fondi
-:Berto:
-#+end_src
-
 #+CAPTION: Apertura e deposito fondi on-chain in un payment channel.
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:apertura_payment_channel.png]]
 
 
 **Join** In un secondo momento Berto effettua il join del canale di pagamento aperto da Alice; è possibile eseguire questa operazione solamente quando lo smart contract si trova nello stato $OPENED$. Anche questa operazione viene effettuata on-chain. Berto deposita i fondi che corrisponderanno al suo bilancio iniziale e porta in catena il proprio indirizzo ip. Con questa operazione il canale è definitivamente stabilito e lo stato passa da $OPENED$ a $ESTABLISHED$. Da questo momento in poi lo smart contract accetta l'invio di messaggi che descrivono l'ultimo aggiornamento del deposito di stato off-chain.
 
-#+begin_src plantuml :file join_payment_channel.png
-skinparam dpi 300
-Alice -> (Smart contract [ESTABLISHED])
-Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
-#+end_src
-
 #+CAPTION: Join e deposito fondi on-chain in un payment channel.
 #+ATTR_HTML: :width 65% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:join_payment_channel.png]]
 
 **Schema propose/accept** I pagamenti off-chain avvengono mediante lo schema propose/accept. Alice (o Berto) propone un aggiornamento dello stato del canale firmando un messaggio. Nell'ambito dello schema propose/accept gli aggiornamenti di stato off-chain prendono il nome di proposta. La proposta viene firmata e inviata da Alice. Berto riceve la proposta, ne verifica la validità ed eventualmente l'accetta rispondendo con la proposta controfirmata. A questo punto è possibile considerare il pagamento come confermato, senza la necessità di ulteriori tempi di attesa. Sebbene l'aggiornamento di stato non sia ancora stato portato in catena, una proposta cofirmata rappresenta per entrambi le parti una prova inconfutabile di avvenuto pagamento.
 
-**Gli endpoint pubblici** Nello schema propose/accept ciascuna controparte di un payment channel mette a disposizione un server http. Gli endpoint pubblici sono detti /propose e /accept. L'endpoint /propose permette di ricevere una proposta di aggiornamento di bilancio. L'endpoint /accept permette di ricevere una proposta precedentemente inviata. In in Tabella [[struct_propose]] si presenta la struttura di una proposta.
+**Gli endpoint pubblici** Nello schema propose/accept ciascuna controparte di un payment channel mette a disposizione un server http. Gli endpoint pubblici sono detti /propose e /accept. L'endpoint /propose permette di ricevere una proposta di aggiornamento di bilancio. L'endpoint /accept permette di ricevere una proposta precedentemente inviata. In in Tabella [[#struct_propose][1]] si presenta la struttura di una proposta.
 
 **Richiesta di chiusura** Chiudere un canale significa aggiornare il bilancio on-chain delle parti in modo tale che corrisponda a quello dell'ultima proposta comunemente accordata. Con proposta comunemente accordata si intende un aggiornamento di stato firmato da entrambe le parti. La prima fase di questo processo è detta richiesta di chiusura. In particolare si porta in catena l'ultima proposta comunemente firmata. In questo modo lo stato del canale passa da $ESTABLISHED$ a $CLOSED$. La richiesta di chiusura può essere effettuata da Alice o da Berto. 
 
-#+CAPTION: Struttura di una proposta
-#+LABEL: struct_propose
+#+CAPTION: <<struct_propose>>Struttura di una proposta
+#+NAME: struct_propose
 | Campo     | Descrizione                                        |
 |-----------+----------------------------------------------------|
 | seq       | Il numero di sequenza                              |
@@ -150,7 +135,7 @@ Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
 
 **Finalizzazione della chiusura** L'operazione di finalizzazione della chiusura viene effettuata da tutte e due le parti. Essa corrisponde al ritiro on-chain dei rispettivi fondi. Questa operazione può essere effettuata solo quando è passato un certo tempo dalla richiesta di chiusura. Il tempo che occorre attendere per finalizzare la chiusura è detto grace period (tempo di grazia).
 
-**Discutere una proposta** Alice (o Berto) potrebbe non comportarsi correttamente, portando in chiusura una proposta diversa dalla più recente. In questo caso Berto può discutere la proposta durante il grace period. Discutere significa portare in catena una proposta firmata da Alice con numero di sequenza maggiore rispetto a quella presentata (vedi Tabella [[struct_propose]]). Nel caso in cui la discussione abbia successo, Alice viene punita; la punizione consiste nel trasferimento di tutti i suoi fondi a Berto.
+**Discutere una proposta** Alice (o Berto) potrebbe non comportarsi correttamente, portando in chiusura una proposta diversa dalla più recente. In questo caso Berto può discutere la proposta durante il grace period. Discutere significa portare in catena una proposta firmata da Alice con numero di sequenza maggiore rispetto a quella presentata (vedi Tabella [[#struct_propose][1]]). Nel caso in cui la discussione abbia successo, Alice viene punita; la punizione consiste nel trasferimento di tutti i suoi fondi a Berto.
 
 
 **Il problema della free-option** Quando Alice invia una proposta a Berto senza ricevere la controfirma, Berto ha il vantaggio di poter scegliere di chiudere il canale con due proposta, la penultima o l'ultima. Inviare una proposta però coincide con inviare un pagamento, quindi sebbene Berto possa decidere di presentare in catena la penultima proposta, questa descriverà uno stato per lui più svantaggioso.
@@ -158,20 +143,20 @@ Berto --> (Smart contract [ESTABLISHED]): Join e deposito fondi
 *** Inextinguishable payment channel
 I payment channel permettono di trasferire un volume di coin limitato. Il valore trasferibile è fissato alla somma del bilancio di Alice e di Berto. Spesso questi canali sono sbilanciati, ovvero una delle due controparti effettua più pagamenti dell'altra (si pensi a un canale di pagamento instaurato tra il proprietario di un ecommerce e un suo utente). Un canale sbilanciato nel tempo prosciuga il balance di una delle due parti, rendendo il payment channel inutilizzabile. Il canale diventa inutilizzabile poiché una delle due parti ha un bilancio pari a zero e quindi non può più effettuare dei pagamenti. Nella tipologia di canale di pagamento presentata in Sezione \ref{payment-channel}, l'unica soluzione a questo problema consiste nel chiudere il payment channel corrente e aprirne un nuovo, caricando i nuovi fondi. Questa soluzione però richiede delle onerose operazioni on-chain; in particolare occorre effettuare il deploy di un nuovo smart contract e successivamente instaurare la connessione con le operazioni di apertura e di join. Gli inextinguishable payment channel (o IPC) superano questo problema, proponendo dei canali di pagamento che permettono di ricaricare o prelevare un'entità $N$ di coin a caldo dal proprio bilancio, evitando quindi di dover stabilire un nuovo canale di pagamento. Questo permette di instaurare dei canali che possono rimanere aperti per un tempo indefinitamente lungo; infatti quando il bilancio di una delle due parti si prosciuga, quest'ultima potrà decidere di ricaricare a caldo un certo quantitativo di coin con una singola operazione on-chain. Se invece una delle due parti decide di voler spostare i fondi off-chain sulla catena, potrà farlo con un prelievo a caldo, evitando di dover chiudere il canale.
 
-**Schema detach/attach** Questo protocollo rappresenta un'estensione dello schema propose/accept. Esso permette di staccare un token off-chain e di attaccarlo on-chain. Un token rappresenta un certo quantitativo di coin del bilancio. La struttura di un token è illustrata in Tabella [[struct_token]].
+**Schema detach/attach** Questo protocollo rappresenta un'estensione dello schema propose/accept. Esso permette di staccare un token off-chain e di attaccarlo on-chain. Un token rappresenta un certo quantitativo di coin del bilancio. La struttura di un token è illustrata in Tabella [[#struct_token][2]].
 
-#+CAPTION: Struttura di un token
-#+LABEL: struct_token
-| Campo      | Descrizione                  |
-|------------+------------------------------|
-| seq        | Numero di sequenza del token |
-| value      | Valore del token             |
-| sign       | Firma del token              |
+#+CAPTION: <<struct_token>>Struttura di un token
+#+NAME: struct_token
+| Campo | Descrizione                  |
+|-------+------------------------------|
+| seq   | Numero di sequenza del token |
+| value | Valore del token             |
+| sign  | Firma del token              |
 
-Anche la struttura dati relativa a una propose viene estesa. I campi aggiunti sono illustrati in Tabella [[propose_estesa]].
+Anche la struttura dati relativa a una propose viene estesa. I campi aggiunti sono illustrati in Tabella [[#propose_estesa][3]].
 
-#+CAPTION: Campi propose aggiuntivi in un IPC
-#+LABEL: propose_estesa
+#+CAPTION: <<propose_estesa>>Campi propose aggiuntivi in un IPC
+#+NAME: propose_estesa
 | Campo           | Descrizione              |
 |-----------------+--------------------------|
 | hash token      | L'hash relativo al token |
@@ -239,26 +224,12 @@ Un obiettivo di questa tesi è stato dimostrare la fattibilità delle principali
 *** Dimostrare la scalabilità architetturale
 Come detto in Capitolo \ref{background}, le motivazioni che hanno mosso la progettazione di FulgurHub riguardano i limiti architetturali di scalabilità della blockchain. Obiettivo di questa tesi è stato anche dimostrare la scalabilità architetturale di FulgurHub.
 ** Descrizione generale dell'architettura
-In FulgurHub ciascun utente possiede due bilancio, uno on-chain e uno off-chain. Effettuare un pagamento significa quindi aggiornare o il deposito di stato on-chain o il deposito di stato off-chain o entrambi nel caso dei pagamenti ibridi. Il deposito di stato on-chain è bloccato da uno smart contract. Mantenere le informazioni relative al deposito di stato off-chain è invece responsabilità dell'utente; a tale scopo l'utente utilizza un client che memorizza le informazioni necessarie su un database dedicato. In Figura [[architecture-hub-and-spoke]] si mostra la topologia hub-and-spoke in cui 4 utenti (Alice, Berto, Cecilia e Dario) operano su FulgurHub [@Spini2018].
+In FulgurHub ciascun utente possiede due bilancio, uno on-chain e uno off-chain. Effettuare un pagamento significa quindi aggiornare o il deposito di stato on-chain o il deposito di stato off-chain o entrambi nel caso dei pagamenti ibridi. Il deposito di stato on-chain è bloccato da uno smart contract. Mantenere le informazioni relative al deposito di stato off-chain è invece responsabilità dell'utente; a tale scopo l'utente utilizza un client che memorizza le informazioni necessarie su un database dedicato. In Figura [[#architecture-hub-and-spoke][4]] si mostra la topologia hub-and-spoke in cui 4 utenti (Alice, Berto, Cecilia e Dario) operano su FulgurHub [@Spini2018].
 
-#+begin_src plantuml :file hub-and-spoke-architecture.png
-skinparam dpi 300
-skinparam SequenceMessageAlign center
-rectangle FulgurHub #yellow
-rectangle Alice #white
-rectangle Berto #whyte
-rectangle Cecilia #white
-rectangle Dario #white
-Alice -up-> (FulgurHub)
-Berto -right-> (FulgurHub)
-Cecilia -down-> (FulgurHub)
-Dario -left-> (FulgurHub)
-#+end_src
-
-#+CAPTION: Architettura hub-and-spoke di FulgurHub
-#+LABEL: architecture-hub-and-spoke
+#+CAPTION: <<architecture-hub-and-spoke>>Architettura hub-and-spoke di FulgurHub
+#+NAME: architecture-hub-and-spoke
 #+ATTR_HTML: :width 75% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:hub-and-spoke-architecture.png]]
 
 
@@ -297,18 +268,12 @@ a) $\{\alpha^A\} \not\subset \Pi^H$ \\
 b) L'hub ha deployato lo smart contract\\
 c) Il server dell'hub è in ascolto
 
-**Descrizione delle interazioni** Un client per sottoscrivere un FulgurHub deve eseguire la funzione subscribe dello smart contract fornendo il proprio indirizzo ethereum $\alpha_C$, il bilancio iniziale off-chain $\beta^C_0$ e on-chain $\overline{\beta^C}$. Inoltre il client deve indicare il bilancio iniziale off-chain dell'hub $\beta^H$. Una volta eseguita la transazioni on-chain viene recapitata una notifica all'hub $<\beta^C_0, \overline{\beta^C}, \beta^H, \alpha_C>$. In Figura [[sottoscrizione-fulgur-hub]] viene fornito un diagramma di sequenza del caso d'uso.
+**Descrizione delle interazioni** Un client per sottoscrivere un FulgurHub deve eseguire la funzione subscribe dello smart contract fornendo il proprio indirizzo ethereum $\alpha_C$, il bilancio iniziale off-chain $\beta^C_0$ e on-chain $\overline{\beta^C}$. Inoltre il client deve indicare il bilancio iniziale off-chain dell'hub $\beta^H$. Una volta eseguita la transazioni on-chain viene recapitata una notifica all'hub $<\beta^C_0, \overline{\beta^C}, \beta^H, \alpha_C>$. In Figura [[#sottoscrizione-fulgur-hub][5]] viene fornito un diagramma di sequenza del caso d'uso.
 
-#+begin_src plantuml :file apertura-canale.png
-skinparam dpi 200 
-Alice -> SmartContract: <latex>\tiny{subscribe <\beta^C_0, \overline{\beta^C}, \beta_H>}</latex>
-SmartContract -> Hub: <latex>\tiny{SubscriptionEvent <\beta^C_0, \overline{\beta^C}, \beta_H, \alpha_C>}</latex>
-#+end_src
-
-#+CAPTION: Sottoscrizione di un FulgurHub
-#+LABEL: sottoscrizione-fulgur-hub
+#+CAPTION: <<sottoscrizione-fulgur-hub>>Sottoscrizione di un FulgurHub
+#+NAME: sottoscrizione-fulgur-hub
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:apertura-canale.png]]
 
 *** Pagamento OnChain-OnChain
@@ -318,17 +283,12 @@ Un pagamento OnChain-OnChain sposta $\nu$ fondi dal balance on-chain di Alice $\
 a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) Il balance on-chain di Alice e Berto è rispettivamente pari $\overline{\beta^A}$ e $\overline{\beta^B}$
 
-**Descrizione delle interazioni** Alice esegue il metodo transfer dello smart contract. L'esecuzione del metodo richiede il quantitativo $\nu$ di fondi che si intende spostare e l'indirizzo ethereum $\alpha^B$ di Berto. Terminata l'esecuzione del metodo lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}-\nu$ e quello di Berto in $\overline{\beta^B}+\nu$. Un diagramma di sequenza è disponibile in Figura [[caso-duso-onchain-onchain]].
+**Descrizione delle interazioni** Alice esegue il metodo transfer dello smart contract. L'esecuzione del metodo richiede il quantitativo $\nu$ di fondi che si intende spostare e l'indirizzo ethereum $\alpha^B$ di Berto. Terminata l'esecuzione del metodo lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}-\nu$ e quello di Berto in $\overline{\beta^B}+\nu$. Un diagramma di sequenza è disponibile in Figura [[#caso-duso-onchain-onchain][6]].
 
-#+begin_src plantuml :file caso-duso-onchain-onchain.png
-skinparam dpi 200
-Alice -> SmartContract: <latex>\tiny{transfer<\nu, \alpha^B>}</latex>
-#+end_src
-
-#+CAPTION: Pagamento OnChain-OnChain in FulgurHub.
-#+LABEL: caso-duso-onchain-onchain
+#+CAPTION: <<caso-duso-onchain-onchain>>Pagamento OnChain-OnChain in FulgurHub.
+#+NAME: caso-duso-onchain-onchain
 #+ATTR_HTML: :width 45% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-onchain-onchain.png]]
 
 *** Pagamento OffChain-OffChain
@@ -362,22 +322,12 @@ Berto invia la ricevuta di pagamento $\phi^{\sigma_B}_{j+1}$ ad Alice. Alice ora
 \phi^{\sigma_A}_{i+2} = <\beta^B_i+\nu_y, \beta^H_i-\nu_y, \tau^{\sigma_B}_y ,\mathbb{A}>_(\sigma_B)
 \end{equation}
 
-Il pagamento OffChain-OffChain è considerato concluso. In Figura [[caso-duso-offchain-offchain]] viene fornito uno diagramma di sequenza delle interazioni.
+Il pagamento OffChain-OffChain è considerato concluso. In Figura [[#caso-duso-offchain-offchain][7]] viene fornito uno diagramma di sequenza delle interazioni.
 
-#+begin_src plantuml :file caso-duso-offchain-offchain.png
-skinparam dpi 200
-Alice -> Hub: <latex>\tiny{<\phi^{\sigma_A}_{i+1}>}</latex>
-Hub -> Alice: <latex>\tiny{<\phi^{\sigma_A,\sigma_H}_{i+1}>, <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
-Alice -> Berto: <latex>\tiny{<\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
-Berto -> Hub: <latex>\tiny{<\phi^{\sigma_B}_{j+1}>}</latex>
-Berto -> Alice: <latex>\tiny{<\phi^{\sigma_B}_{j+1}>}</latex>
-Alice -> Hub: <latex>\tiny{<\phi^{\sigma_A}_{i+2}>}</latex>
-#+end_src
-
-#+CAPTION: Pagamento OffChain-OffChain in FulgurHub.
-#+LABEL: caso-duso-offchain-offchain
+#+CAPTION: <<caso-duso-offchain-offchain>>Pagamento OffChain-OffChain in FulgurHub.
+#+NAME: caso-duso-offchain-offchain
 #+ATTR_HTML: :width 65% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-offchain-offchain.png]]
 
 **B non invia la ricevuta di pagamento ad A** Il collegamento tra Alice e Berto è opzionale. Alice infatti può contattare l'hub e richiedere la ricevuta di pagamento.
@@ -405,20 +355,12 @@ b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$.
 \end{aligned}
 \end{equation}
 
-$\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto effettua l'attach on-chain del token mediante la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Berto in $\overline{\beta^B}+\nu_y$. Il pagamento è considerato concluso. In Figura [[caso-duso-offchain-onchain]] viene fornito uno diagramma di sequenza delle interazioni.
+$\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}$ rappresenta una PoD (Proof of Detachment). Alice invia la PoD a Berto. Berto effettua l'attach on-chain del token mediante la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Berto in $\overline{\beta^B}+\nu_y$. Il pagamento è considerato concluso. In Figura [[#caso-duso-offchain-onchain][8]] viene fornito uno diagramma di sequenza delle interazioni.
 
-#+begin_src plantuml :file caso-duso-offchain-onchain.png
-skinparam dpi 200
-Alice -> Hub: <latex>\tiny{<\phi^{\sigma_A}_{i+1}>}</latex>
-Hub -> Alice: <latex>\tiny{<\phi^{\sigma_A,\sigma_H}_{i+1}>, <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
-Alice -> Berto: <latex>\tiny{attach <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
-Berto -> SmartContract: <latex>\tiny{attach <\tau^{\sigma_A,\sigma_H}_{y, \alpha_B}>}</latex>
-#+end_src
-
-#+CAPTION: Pagamento OffChain-OnChain in FulgurHub.
-#+LABEL: caso-duso-offchain-onchain
+#+CAPTION: <<caso-duso-offchain-onchain>>Pagamento OffChain-OnChain in FulgurHub.
+#+NAME: caso-duso-offchain-onchain
 #+ATTR_HTML: :width 80% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-offchain-onchain.png]]
 
 *** Pagamento OnChain-OffChain
@@ -429,20 +371,12 @@ a) $\{\alpha^A, \alpha^B\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Berto è $\phi^B_j$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
-**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract fornendo l'indirizzo di Berto ($\alpha_B$) e il quantitativo $\nu$ che si vuole staccare. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Terminata l'esecuzione della funzione, lo smart contract invia la relativa PoD a Berto. Berto costruisce, firma e invia $\phi^{\sigma_B}_{j+1}$ all'hub, attaccando la PoD. L'hub risponde con la propose firmata $\phi^{\sigma_B,\sigma_H}_{j+1}$. In Figura [[caso-duso-onchain-offchain]] viene fornito uno diagramma di sequenza delle interazioni.
+**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract fornendo l'indirizzo di Berto ($\alpha_B$) e il quantitativo $\nu$ che si vuole staccare. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Terminata l'esecuzione della funzione, lo smart contract invia la relativa PoD a Berto. Berto costruisce, firma e invia $\phi^{\sigma_B}_{j+1}$ all'hub, attaccando la PoD. L'hub risponde con la propose firmata $\phi^{\sigma_B,\sigma_H}_{j+1}$. In Figura [[#caso-duso-onchain-offchain][9]] viene fornito uno diagramma di sequenza delle interazioni.
 
-#+begin_src plantuml :file caso-duso-onchain-offchain.png
-skinparam dpi 200
-Alice -> SmartContract: <latex>\tiny{detach <\alpha_B, \nu>}</latex>
-SmartContract -> Berto: <latex>\tiny{TokenDetached <\alpha_B, \nu>}</latex>
-Berto -> Hub: <latex>\tiny {<\phi^{\sigma_B}_{j+1}>}</latex>
-Hub -> Berto: <latex>\tiny {<\phi^{\sigma_B,\sigma_H}_{j+1}>}</latex>
-#+end_src
-
-#+CAPTION: Pagamento OnChain-OffChain in FulgurHub.
-#+LABEL: caso-duso-onchain-offchain
+#+CAPTION: <<caso-duso-onchain-offchain>>Pagamento OnChain-OffChain in FulgurHub.
+#+NAME: caso-duso-onchain-offchain
 #+ATTR_HTML: :width 90% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-onchain-offchain.png]]
 
 \begin{equation}
@@ -471,19 +405,12 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 \end{aligned}
 \end{equation}
 
-Alice presenta $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ in catena eseguendo la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Un diagramma delle interazioni viene fornito in Figura [[caso-duso-prelievo-a-caldo]].
+Alice presenta $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ in catena eseguendo la funzione attach dello smart contract. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta_A}+\nu$. Un diagramma delle interazioni viene fornito in Figura [[#caso-duso-prelievo-a-caldo][10]].
 
-#+begin_src plantuml :file caso-duso-prelievo-a-caldo.png
-skinparam dpi 200
-Alice -> Hub: <latex>\tiny{\phi^{\sigma_A}_{i+1}}</latex>
-Hub -> Alice: <latex>\tiny{\phi^{\sigma_A,\sigma_H}_{i+1}, \tau^{\sigma_A,\sigma_H}_{y, \alpha_A}}</latex>
-Alice -> Smartcontract: <latex>\tiny {attach <\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}>}</latex>
-#+end_src
-
-#+CAPTION: Prelievo a caldo in FulgurHub.
-#+LABEL: caso-duso-prelievo-a-caldo
+#+CAPTION: <<caso-duso-prelievo-a-caldo>>Prelievo a caldo in FulgurHub.
+#+NAME: caso-duso-prelievo-a-caldo
 #+ATTR_HTML: :width 50% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-prelievo-a-caldo.png]]
 
 *** Ricarica a caldo
@@ -494,7 +421,7 @@ a) $\{\alpha^A\} \subseteq \Pi^H$ \\
 b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$ \\
 c) Il balance on-chain di Alice è $\overline{\beta_A}$
 
-**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract passando come parametri $\alpha_A$ e $\nu$. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}+\nu$. Una volta terminata l'esecuzione della funzione, lo smart contract invia all'hub e ad Alice la relativa PoD. Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ controfirmati. Un diagramma del protocollo viene fornito in Figura [[caso-duso-ricarica-a-caldo]].
+**Descrizione delle interazioni** Alice esegue la funzione detach dello smart contract passando come parametri $\alpha_A$ e $\nu$. Lo smart contract aggiorna il balance on-chain di Alice in $\overline{\beta^A}+\nu$. Una volta terminata l'esecuzione della funzione, lo smart contract invia all'hub e ad Alice la relativa PoD. Alice costruisce, firma e invia $\phi^{\sigma_A}_{i+1}$ all'hub. L'hub risponde con la propose $\phi^{\sigma_A,\sigma_H}_{i+1}$ e il token $\tau^{\sigma_A,\sigma_H}_{y, \alpha_A}$ controfirmati. Un diagramma del protocollo viene fornito in Figura [[#caso-duso-ricarica-a-caldo][11]].
 
 \begin{equation}
 \begin{aligned}
@@ -504,17 +431,10 @@ c) Il balance on-chain di Alice è $\overline{\beta_A}$
 \end{aligned}
 \end{equation}
 
-#+begin_src plantuml :file caso-duso-ricarica-a-caldo.png
-skinparam dpi 200
-Alice -> Smartcontract: <latex>\tiny{detach <\alpha_A, \nu>}</latex>
-Alice -> Hub: <latex>\tiny {\phi^{\sigma_A}_{i+1}, \tau^{\sigma_A}_{y, \alpha_A}}</latex>
-Hub -> Alice: <latex>\tiny {\phi^{\sigma_A,\sigma_H}_{i+1}, \tau^{\sigma_A,\sigma_H}_{y, \alpha_A}}</latex>
-#+end_src
-
-#+CAPTION: Ricarica a caldo in FulgurHub.
-#+LABEL: caso-duso-ricarica-a-caldo
+#+CAPTION: <<caso-duso-ricarica-a-caldo>>Ricarica a caldo in FulgurHub.
+#+NAME: caso-duso-ricarica-a-caldo
 #+ATTR_HTML: :width 60% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-ricarica-a-caldo.png]]
 
 *** Chiusura di un canale
@@ -525,16 +445,10 @@ b) L'ultima propose confermata nel canale di Alice è $\phi^A_i$
 **Descrizione delle interazioni** Alice porta in catena l'ultima propose $\phi^A_i$ con la funzione close dello smart contract. Lo smart contract registra la richiesta di chiusura del canale e avvia un timer di durata pari a una costante $G$ dello smart contract, detta grace period. Scaduto il timer, Alice può ritirare tutti i suoi fondi $\overline{\beta^A}+\beta^A_{i}$ eseguendo la funzione withdraw dello smart contract.
 
 
-#+begin_src plantuml :file caso-duso-chiusura-canale.png
-skinparam dpi 200
-Alice -> Smartcontract: <latex>\tiny{close <\phi^A_i>}</latex>
-Alice -> Smartcontract: <latex>\tiny {withdraw}</latex>
-#+end_src
-
-#+CAPTION: Chiusura canale in FulgurHub.
-#+LABEL: caso-duso-chiusura-canale
+#+CAPTION: <<caso-duso-chiusura-canale>>Chiusura canale in FulgurHub.
+#+NAME: caso-duso-chiusura-canale
 #+ATTR_HTML: :width 40% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:caso-duso-chiusura-canale.png]]
 
 *** Riscossione di un pending token
@@ -581,19 +495,19 @@ La blockchain presa come riferimento è Ethereum. Le motivazioni che hanno mosso
 
 *** Dettagli implementativi
 **Interfaccia in TypeScript** Di seguito viene esposta l'interfaccia di alto livello dello smart contract in TypeScript. Il funzionamento delle singole operazioni è descritto in dettaglio nel Capitolo \ref{analisi}.
-#+begin_src javascript
-interface SmartContract {
-    subscribe(wallet: Wallet);
-    detachToken(token: Token);
-    attachToken(token: Token);
-    transfer(payeeAddress: string, amount: BigNumber);
-    close(propose: Propose);
-    redeemToken(token: Token);
-    argueRedemptionToken(token: Token);
-    withdraw();
-    argueClosure(propose: Propose);
-}
-#+end_src
+#+BEGIN_SRC javascript
+  interface SmartContract {
+      subscribe(wallet: Wallet);
+      detachToken(token: Token);
+      attachToken(token: Token);
+      transfer(payeeAddress: string, amount: BigNumber);
+      close(propose: Propose);
+      redeemToken(token: Token);
+      argueRedemptionToken(token: Token);
+      withdraw();
+      argueClosure(propose: Propose);
+  }
+#+END_SRC
 
 **Il tipo Wallet** Il tipo Wallet rappresenta la registrazione di un utente su FulgurHub. Esso contiene l'indirizzo pubblico del client e dello smart contract, il bilancio on-chain/off-chain iniziale del client e il bilancio off-chain dell'hub.
 
@@ -617,7 +531,7 @@ Il client è il modulo che permette a un utente di interagire con l'hub, gli alt
 **Il monitor** L'architettura FulgurHub deve gestire un gran numero di eventi asincroni; solo la corretta gestione degli utenti permette di ottenere una corretta e sicura costruzione di FulgurHub. Data la cruciale importanza della loro gestione, si è deciso di localizzare questa responsabilità in un modulo dedicato denominato monitor. Il monitor gestisce due eventi asincroni: $onChainDetachment$ e $onProofOfDetachmentPushed$.
 
 - $onChainDetachment$ è un evento generato dallo smart contract quando qualcuno effettua il detach di un token on-chain a favore dell'utente corrente.
-- $onProofOfDetachmentPushed$ è un evento generato quando l'utente corrente riceve una nuova proof of detachment. 
+- $onProofOfDetachmentPushed$ è un evento generato quando l'utente corrente riceve una nuova proof of detachment.
 
 Il comportamento legato a un evento non è contenuto all'interno del monitor; il monitor infatti permette solo di agganciare o sganciare a un evento un certo insieme di comportamenti, ovvero di funzioni. Questo approccio consente di estendere facilmente le funzionalità del modulo e quindi migliora la modificabilità del progetto.
 
@@ -627,144 +541,144 @@ Il comportamento legato a un evento non è contenuto all'interno del monitor; il
 Di seguito sono descritti i principali endpoint privati suddivisi per categoria di operazione.
 
 **Iscrizione di un wallet** Un utente può registrare un wallet su FulgurHub mediante questo endpoint. Il tipo $Wallet$ contiene tutte le informazioni necessarie e viene passato come unico parametro http:
-#+begin_src javascript
-POST: /subscribe
-#+end_src
-#+begin_src javascript
-{
-  wallet: Wallet
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /subscribe
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+    wallet: Wallet
+  }
+#+END_SRC
 
 **Pagamento OnChain-OnChain** Come visto in Capitolo \ref{analisi} i pagamenti OnChain-OnChain vengono gestiti dallo smart contract. Questo endpoint privato avvia il trasferimento eseguendo l'operazione $transfer$ dello smart contract:
-#+begin_src javascript
-POST: /transferOnChainOnChain
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /transferOnChainOnChain
+#+END_SRC
 I parametri necessari a eseguire questa operazione sono $recipientAddress$, ovvero l'indirizzo del pagato e $amount$ ovvero l'importo che si vuole trasferire.
-#+begin_src javascript
-{
-    recipientAddress: string,
-    amount: BigNumber
-}
-#+end_src
+#+BEGIN_SRC javascript
+  {
+      recipientAddress: string,
+      amount: BigNumber
+  }
+#+END_SRC
 
 **Pagamento OffChain-OffChain** La prima fase di un pagamento OffChain-OffChain consiste nell'effettuare il detach di un token OffChain-OffChain, ovvero di un token che è stato staccato off-chain e che verrà attaccato off-chain. I parametri necessari a eseguire il detach sono $addressPayee$, ovvero l'indirizzo pubblico del pagato, $uriPayee$  l'indirizzo del server del pagato, $amount$ il quantitativo che si intende trasferire e $ttl$ il tempo di vita del token:
-#+begin_src javascript
-POST: /detachOffChainTokenOffChain
-#+end_src
-#+begin_src javascript
-{
-    addressPayee: string,
-    uriPayee: string,
-    amount: BigNumber,
-    ttl: BigNumber
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /detachOffChainTokenOffChain
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      addressPayee: string,
+      uriPayee: string,
+      amount: BigNumber,
+      ttl: BigNumber
+  }
+#+END_SRC
 
 Una volta ricevuta la proof of detachment dall'hub, essa può essere inviata al client mediante questo endpoint:
-#+begin_src javascript
-POST: /sendProofOfDetachment
-#+end_src
-#+begin_src javascript
-{
-    proofOfDetachment: Token
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /sendProofOfDetachment
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      proofOfDetachment: Token
+  }
+#+END_SRC
 
 Il pagato recupera le proof of detachment ricevute mediante questo endpoint:
-#+begin_src javascript
-POST: /popProofOfDetachment
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /popProofOfDetachment
+#+END_SRC
 
 e invia al client pagante la ricevuta di pagamento:
-#+begin_src javascript
-POST: /sendPaymentReceipt
-#+end_src
-#+begin_src javascript
-{
-    paymentReceipt: PaymentReceipt
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /sendPaymentReceipt
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      paymentReceipt: PaymentReceipt
+  }
+#+END_SRC
 
 Questo endpoint permette al pagante di una transazione OffChain-OffChain di ribilanciare il canale. Con questo comando una transazione OffChain-OffChain viene considerata conclusa:
-#+begin_src javascript
-POST: /settleOffChainOffChainTransfer
-#+end_src
-#+begin_src javascript
-{
-    propose: Propose
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /settleOffChainOffChainTransfer
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      propose: Propose
+  }
+#+END_SRC
 
 **Pagamento OnChain-OffChain** Avvia un pagamento OnChain-OffChain. I parametri necessari sono gli stessi dell'endpoint $/detachOffChainTokenOffChain$:
-#+begin_src javascript
-POST: /detachOnChainTokenOffChain
-#+end_src
-#+begin_src javascript
-{
-    addressPayee: string,
-    uriPayee: string,
-    amount: BigNumber,
-    ttl: BigNumber
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /detachOnChainTokenOffChain
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      addressPayee: string,
+      uriPayee: string,
+      amount: BigNumber,
+      ttl: BigNumber
+  }
+#+END_SRC
 
 **Pagamento OffChain-OnChain** Avvia un pagamento di tipo OffChain-OnChain:
-#+begin_src javascript
-POST: /detachOffChainTokenOnChain
-#+end_src
-#+begin_src javascript
-{
-    addressPayee: string,
-    uriPayee: string,
-    amount: BigNumber
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /detachOffChainTokenOnChain
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      addressPayee: string,
+      uriPayee: string,
+      amount: BigNumber
+  }
+#+END_SRC
 
 **Incassare un token** Una volta ricevuto un off-chain token, questo può essere riscosso mediante questo endpoint: 
-#+begin_src javascript
-POST: /attachTokenOffChain
-#+end_src
-#+begin_src javascript
-{
-    proofOfDetachment: Token
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /attachTokenOffChain
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      proofOfDetachment: Token
+  }
+#+END_SRC
 
 **Incassare un pending token** Un pending token può essere incassato durante il grace period del canale mediante questo endpoint:
-#+begin_src javascript
-POST: /redeemToken
-#+end_src
-#+begin_src javascript
-{
-    token: Token
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /redeemToken
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      token: Token
+  }
+#+END_SRC
 
-#+begin_src javascript
-POST: /retrievePaymentReceipt
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /retrievePaymentReceipt
+#+END_SRC
 Nel caso in cui il pagato non sia collaborativo un utente può richiedere una ricevuta di pagamento all'hub utilizzando questo endpoint:
-#+begin_src javascript
-{
-    clientAddress: string
-}
-#+end_src
+#+BEGIN_SRC javascript
+  {
+      clientAddress: string
+  }
+#+END_SRC
 
 **Chiudere un canale** Avvia la chiusura del canale di pagamento. La chiusura avviene presentando in catena $latestPropose$, ovvero l'ultima propose concordata tra client e hub:
-#+begin_src javascript
-POST: /close
-#+end_src
-#+begin_src javascript
-{
-    latestPropose: Propose
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /close
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      latestPropose: Propose
+  }
+#+END_SRC
 
 **Finalizzare chiusura** Terminato il grace period, il client può effettuare il $withdraw$, finalizzando la chiusura del canale. Questo endpoint permette di eseguire questa operazione:
-#+begin_src javascript
-POST: /withdraw
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /withdraw
+#+END_SRC
 
 ** Hub
 *** Responsabilità e requisiti
@@ -796,24 +710,24 @@ Nel caso in cui si debba aumentare il numero di transazioni al secondo si potrà
 Di seguito vengono descritti gli unici endpoint pubblici che mette a disposizione l'hub.
 
 **Ricezione di una propose** Come visto in Capitolo \ref{analisi} il client effettua dei pagamenti proponendo l'aggiornamento del bilancio off-chain all'hub. Questa proposta viene servita dal client mediante il seguente endpoint pubblico messo a disposizione dall'hub. L'hub a sua volta verifica la proposta, aggiorna lo stato off-chain del canale di pagamento scrivendolo sul database in locale e invia la proposta controfirmata al client.
-#+begin_src javascript
-POST: /sendPropose
-#+end_src
-#+begin_src javascript
-{
-  clientSignedPropose: Propose
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /sendPropose
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+    clientSignedPropose: Propose
+  }
+#+END_SRC
 
 **Richiesta di ricevuta di pagamento** Un client per essere certo che un pagamento OffChain-OffChain sia andato a buon fine necessita di una ricevuta di pagamento. Quando il pagato è completamente collaborativo è lui stesso a fornire questa ricevuta di pagamento al pagante. Quando in un pagamento OffChain-OffChain il pagato non è collaborativo è l'hub a dover fornire la ricevuta di pagamento. Come già detto precedentemente l'hub però è passivo, il che significa che non può contattare direttamente il client. Per questo motivo il seguente endpoint viene messo a disposizione. Il client infatti interrogando questo endpoint e fornendo il proprio indirizzo pubblico ottiene la corrispettiva ricevuta di pagamento.
-#+begin_src javascript
-POST: /retrievePaymentReceipt
-#+end_src
-#+begin_src javascript
-{
-  clientAddress: string
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /retrievePaymentReceipt
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+    clientAddress: string
+  }
+#+END_SRC
 
 * Prove sperimentali
 Questo Capitolo discute le prove sperimentali condotte sull'implementazione di FulgurHub. In particolare in Sezione \ref{gli-obiettivi} si discutono gli obiettivi, in Sezione \ref{lapproccio-adottato} l'approccio adottato, in Sezione \ref{throughput-del-client} si mostrano i risultati relativi al client, in Sezione \ref{throughput-dellhub} si discutono i risultati dell'hub, in Sezione \ref{profiling} viene descritto il profiling dell'operazione di pagamento OffChain-OffChain e infine in Sezione \ref{considerazioni} si fanno delle considerazioni generali sui risultati ottenuti in termini di performance e scalabilità.
@@ -830,81 +744,59 @@ Questo endpoint permette di effettuare il setup dell'ambiente di test, in partic
 - **Hub** Con hub si intende il server dell'hub. Anch'esso viene deployato su un nodo dedicato.
 - **Client** Ciascun client viene deployato su un nodo dedicato. Il numero di client da deployare viene specificato mediante il parametro $numberOfClients$.
 - **Ganache** Una blockchain di test deve essere deployata per supportare le operazioni on-chain necessarie come la sottoscrizione dell'hub. A tale scopo è stato utilizzato ganache.
-#+begin_src javascript
-POST: /environment
-#+end_src
-#+begin_src javascript
-{
-    numberOfClients: Number
-}
-#+end_src 
+#+BEGIN_SRC javascript
+  POST: /environment
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      numberOfClients: Number
+  }
+#+END_SRC
 
 Per cancellare l'ambiente di test un comando dedicato viene messo a disposizione:
-#+begin_src javascript
-DELETE: /environment
-#+end_src
+#+BEGIN_SRC javascript
+  DELETE: /environment
+#+END_SRC
 
 Mediante il seguente comando è possibile eseguire un benchmark relativo ai pagamenti OffChain-OffChain; è possibile specificare due parametri: $concurrent$ e $requests$. $concurrent$ indica il numero di coppie di utenti che devono scambiare dei pagamenti in maniera concorrente. $requests$ indica quanti pagamenti deve eseguire ciascuna coppia di utenti. 
-#+begin_src javascript
-POST: /benchmark/transfer/offchain/offchain
-#+end_src
-#+begin_src javascript
-{
-    concurrent: Number,
-    requests: Number
-}
-#+end_src
+#+BEGIN_SRC javascript
+  POST: /benchmark/transfer/offchain/offchain
+#+END_SRC
+#+BEGIN_SRC javascript
+  {
+      concurrent: Number,
+      requests: Number
+  }
+#+END_SRC
 
- **Docker** Ciascun nodo dell'ambiente di test è stato deployato su un container LXC. In particolare il benchmark server utilizza le API di Docker, per costruire e distruggere i container di cui necessita. L'uso di nodi virtualizzati rispetto a nodi fisici reali ha vari vantaggi: tra cui l'abbattimento dei costi e dei tempi di sviluppo e la possibilità di aumentare o diminuire le risorse hardware dedicate di ciascun container modificandone la configurazione. D'altra parte la virtualizzazione non permette di tenere conto della latenza di rete.
+**Docker** Ciascun nodo dell'ambiente di test è stato deployato su un container LXC. In particolare il benchmark server utilizza le API di Docker, per costruire e distruggere i container di cui necessita. L'uso di nodi virtualizzati rispetto a nodi fisici reali ha vari vantaggi: tra cui l'abbattimento dei costi e dei tempi di sviluppo e la possibilità di aumentare o diminuire le risorse hardware dedicate di ciascun container modificandone la configurazione. D'altra parte la virtualizzazione non permette di tenere conto della latenza di rete.
 
 **Simulazione della latenza di rete** Come detto nel precedente paragrafo, la virtualizzazione non permette di tenere conto della latenza di rete. Per questo motivo in fase di test è stata simulata ritardando di un fattore delta le comunicazioni remote.
 
 ** Throughput del client
 Con throughput del client si intende il numero di pagamenti al secondo confermati che un singolo utente può effettuare. Esso è stato verificato sia al variare della RAM che della latenza. Il client è realizzato in Node.js, questo significa che viene eseguito un unico processo senza alcun thread di supporto; per questo motivo non sono state effettuate delle prove sperimentali al variare del numero di core a disposizione.
 
-**Al variare della RAM** Questo test è stato effettuato variando il quantitativo di RAM assegnato ai nodi del client e senza variare quella dedicata all'hub. Come è possibile verificare dai dati in tabella e dal grafico in Figura [[client-ram-chart]] il client raggiunge il throughput massimo con un 1 o 2 GB di RAM.
+**Al variare della RAM** Questo test è stato effettuato variando il quantitativo di RAM assegnato ai nodi del client e senza variare quella dedicata all'hub. Come è possibile verificare dai dati in tabella e dal grafico in Figura [[#client-ram-chart][13]] il client raggiunge il throughput massimo con un 1 o 2 GB di RAM.
 
 
-#+CAPTION: Throughput client al variare della RAM.
-#+LABEL: client_ram
-#+tblname: client-ram-table
+#+CAPTION: <<client-ram-table>>Throughput client al variare della RAM.
+#+NAME: client-ram-table
 | N° | RAM   | Throughput (tx/s) |
 |----+-------+-------------------|
 |  1 | 500MB |                13 |
 |  2 | 1GB   |                32 |
 |  3 | 2GB   |                41 |
 
-#+begin_src gnuplot :var data=client-ram-table :file chart_client_ram.png
-reset
-
-set boxwidth 1
-set yrange [0:45]
-set xtics scale 1,1
-set nokey 
-
-set style fill solid
-
-set style line 1 lc rgb "#FFEB3B"
-set style line 2 lc rgb "#FFC107"
-set style line 3 lc rgb "#FF9800"
-set style line 4 lc rgb "#FF5722"
-
-plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
-     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
-     data every ::2::2 using 1:3:xtic(2) with boxes ls 3
-#+end_src
-
-#+CAPTION: Throughput client al variare della RAM
-#+LABEL: client-ram-chart
+#+CAPTION: <<client-ram-chart>>Throughput client al variare della RAM
+#+NAME: client-ram-chart
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:chart_client_ram.png]]
 
-**Al variare della latenza** I test sulla latenza sono stati eseguiti fissando la RAM di tutti i nodi a 2GB e simulando un ritardo tra tutte le connessioni remote instaurate. Come è possibile notare in Figura [[client-latenza-chart]] la latenza incide in maniera direttamente proporzionale sul throughput del client.
+**Al variare della latenza** I test sulla latenza sono stati eseguiti fissando la RAM di tutti i nodi a 2GB e simulando un ritardo tra tutte le connessioni remote instaurate. Come è possibile notare in Figura [[#client-latenza-chart][14]] la latenza incide in maniera direttamente proporzionale sul throughput del client.
 
-#+CAPTION: Throughput client al variare della latenza.
-#+LABEL: client_latenza
-#+tblname: client-latenza-table
+#+CAPTION: <<client-latenza-table>>Throughput client al variare della latenza.
+#+NAME: client-latenza-table
 | N° | Ritardo simulato (s) | Throughput (tx/s) |
 |----+----------------------+-------------------|
 |  1 |                    0 |                43 |
@@ -913,81 +805,35 @@ plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
 |  4 |                    2 |                 7 |
 |  5 |                   10 |               1.4 |
 
-#+begin_src gnuplot :var data=client-latenza-table :file chart_client_latenza.png
-reset
-
-set boxwidth 1
-set yrange [0:45]
-set xtics scale 1,1
-set nokey 
-
-set style fill solid
-
-set style line 1 lc rgb "#FFEB3B"
-set style line 2 lc rgb "#FFC107"
-set style line 3 lc rgb "#FF9800"
-set style line 4 lc rgb "#FF5722"
-set style line 5 lc rgb "#c0392b"
-
-plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
-     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
-     data every ::2::2 using 1:3:xtic(2) with boxes ls 3, \
-     data every ::3::3 using 1:3:xtic(2) with boxes ls 4, \
-     data every ::4::4 using 1:3:xtic(2) with boxes ls 5
-#+end_src
-
-#+CAPTION: Barchart throughput client al variare della latenza.
-#+LABEL: client-latenza-chart
+#+CAPTION: <<client-latenza-chart>>Barchart throughput client al variare della latenza.
+#+NAME: client-latenza-chart
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:chart_client_latenza.png]]
 
 ** Throughput dell'hub
 Con throughput dell'hub si intende il numero di pagamenti concorrenti al secondo confermati che un singolo hub può gestire. Esso è stato verificato sia al variare della RAM che della latenza. Anche l'hub come il client è realizzato in Node.js, questo significa che viene eseguito un unico processo senza alcun thread di supporto; per questo motivo non sono state effettuate delle prove sperimentali al variare del numero di core a disposizione.
 
-**Al variare della RAM** Il test è stato effettuato variando il quantitativo di RAM assegnata all'hub. Come è possibile verificare dal grafico in Figura [[hub-ram-chart]] l'hub raggiunge il throughput massimo con un 1 o 2 GB di RAM. In particolare su un nodo di calcolo con 500MB di RAM il numero di transazioni completate al secondo è pari a 45. Aumentando la RAM a 1GB il throughput quasi raddoppia, raggiungendo 84 transazioni al secondo.
+**Al variare della RAM** Il test è stato effettuato variando il quantitativo di RAM assegnata all'hub. Come è possibile verificare dal grafico in Figura [[#hub-ram-chart][15]] l'hub raggiunge il throughput massimo con un 1 o 2 GB di RAM. In particolare su un nodo di calcolo con 500MB di RAM il numero di transazioni completate al secondo è pari a 45. Aumentando la RAM a 1GB il throughput quasi raddoppia, raggiungendo 84 transazioni al secondo.
 
-#+CAPTION: Throughput hub al variare della RAM.
-#+LABEL: hub_ram
-#+tblname: hub-ram-table
+#+CAPTION: <<hub-ram-table>>Throughput hub al variare della RAM.
+#+NAME: hub-ram-table
 | N° | RAM   | Throughput (tx/s) |
 |----+-------+-------------------|
 |  1 | 500MB |                45 |
 |  2 | 1GB   |                84 |
 |  3 | 2GB   |                84 |
 
-#+begin_src gnuplot :var data=hub-ram-table :file chart_hub_ram.png
-reset
-
-set boxwidth 1
-set yrange [0:100]
-set xtics scale 1,1
-set nokey 
-
-set style fill solid
-
-set style line 1 lc rgb "#FFEB3B"
-set style line 2 lc rgb "#FFC107"
-set style line 3 lc rgb "#FF9800"
-set style line 4 lc rgb "#FF5722"
-
-plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
-     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
-     data every ::2::2 using 1:3:xtic(2) with boxes ls 3, \
-     data every ::3::3 using 1:3:xtic(2) with boxes ls 4
-#+end_src
-
-#+CAPTION: Barchart throughput hub al variare della RAM
-#+LABEL: hub-ram-chart
+#+CAPTION: <<hub-ram-chart>>Barchart throughput hub al variare della RAM
+#+NAME: hub-ram-chart
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:chart_hub_ram.png]]
 
-**Al variare della latenza** I test sulla latenza relativi all'hub sono stati effettuati fissando a 2GB la RAM di tutti i nodi e simulando un ritardo tra tutte le connessioni remote instaurate. Come è possibile notare in Figura [[hub-latenza-chart]], la latenza incide in maniera direttamente proporzionale sul throughput del client.
+**Al variare della latenza** I test sulla latenza relativi all'hub sono stati effettuati fissando a 2GB la RAM di tutti i nodi e simulando un ritardo tra tutte le connessioni remote instaurate. Come è possibile notare in Figura [[#hub-latenza-chart][16]], la latenza incide in maniera direttamente proporzionale sul throughput del client.
 
-#+CAPTION: Throughput hub al variare della latenza.
-#+LABEL: hub_latenza
-#+tblname: hub-latenza-table
+#+CAPTION: <<hub-latenza-table>>Throughput hub al variare della latenza.
+#+NAME: hub-latenza-table
 | N° | Latenza (s) | Throughput (tx/s) |
 |----+-------------+-------------------|
 |  1 |           0 |                84 |
@@ -996,90 +842,37 @@ plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
 |  4 |           2 |                13 |
 |  5 |          10 |                 2 |
 
-#+begin_src gnuplot :var data=client-latenza-table :file chart_hub_latenza.png
-reset
-
-set boxwidth 1
-set yrange [0:45]
-set xtics scale 1,1
-set nokey 
-
-set style fill solid
-
-set style line 1 lc rgb "#FFEB3B"
-set style line 2 lc rgb "#FFC107"
-set style line 3 lc rgb "#FF9800"
-set style line 4 lc rgb "#FF5722"
-
-plot data every ::0::0 using 1:3:xtic(2) with boxes ls 1, \
-     data every ::1::1 using 1:3:xtic(2) with boxes ls 2, \
-     data every ::2::2 using 1:3:xtic(2) with boxes ls 3, \
-     data every ::3::3 using 1:3:xtic(2) with boxes ls 4
-#+end_src
-
-#+CAPTION: Barchart throughput hub al variare della latenza.
-#+LABEL: hub-latenza-chart
+#+CAPTION: <<hub-latenza-chart>>Barchart throughput hub al variare della latenza.
+#+NAME: hub-latenza-chart
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:chart_hub_latenza.png]]
 ** Profiling
-Come visto nel Capitolo \ref{analisi} un pagamento OffChain-OffChain per essere considerato concluso richiede lo scambio di un certo quantitativo di messaggi, vedi Figura [[profiling-messaggi-offchain]]. In Sezione \ref{throughput-del-client} si è visto che su una macchina con 2GB di RAM un client riesce a completare fino a 41 pagamenti al secondo; quindi un pagamento viene completato in circa 24ms. 
+Come visto nel Capitolo \ref{analisi} un pagamento OffChain-OffChain per essere considerato concluso richiede lo scambio di un certo quantitativo di messaggi, vedi Figura [[#profiling-messaggi-offchain][17]]. In Sezione \ref{throughput-del-client} si è visto che su una macchina con 2GB di RAM un client riesce a completare fino a 41 pagamenti al secondo; quindi un pagamento viene completato in circa 24ms. 
 
-#+begin_src plantuml :file profilazione-caso-duso-offchain-offchain.png
-skinparam dpi 200
-Alice -> Hub: 1) Detach del token
-Alice -> Berto: 2) Invio della PoA
-Berto -> Hub: 3) Attach del token
-Berto -> Alice: 4) Ricevuta di pagamento
-Alice -> Hub: 5) Propose di settlement
-#+end_src
-
-#+CAPTION: Pagamento OffChain-OffChain in FulgurHub.
-#+LABEL: profiling-messaggi-offchain
+#+CAPTION: <<profiling-messaggi-offchain>>Pagamento OffChain-OffChain in FulgurHub.
+#+NAME: profiling-messaggi-offchain
 #+ATTR_HTML: :width 80% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:profilazione-caso-duso-offchain-offchain.png]]
 
-Rispetto alle operazioni indicate in Figura [[profiling-messaggi-offchain]], la loro distribuzione nel tempo è indicata nel diagramma in Figura [[profiling-offchain]].
+Rispetto alle operazioni indicate in Figura [[#profiling-messaggi-offchain][17]], la loro distribuzione nel tempo è indicata nel diagramma in Figura [[#profiling-offchain][18]].
 
-#+begin_src plantuml :file profiling.png
-skinparam dpi 200
-robust "Pagamento OffChain-OffChain" as WU
-
-@0
-WU is "Detach del token"
-
-@6
-WU is "Invio della PoA"
-
-@8
-WU is "Attach del token"
-
-@16
-WU is "Ricevuta di pagamento"
-
-@18
-WU is "Settlement"
-
-@24
-WU is "Pagamento confermato"
-#+end_src
-
-#+CAPTION: Profiling pagamento OffChain-OffChain
-#+LABEL: profiling-offchain
+#+CAPTION: <<profiling-offchain>>Profiling pagamento OffChain-OffChain
+#+NAME: profiling-offchain
 #+ATTR_HTML: :width 100% :placement [!htb]
-#+RESULTS:
+#+RESULTS: 
 [[file:profiling.png]]
 
-Come è possibile notare dalla Figura [[profiling-offchain]] le operazioni più onerose risultano essere il detach del token, l'attach del token e l'invio della propose di settlement, ovvero tutte le operazioni che richiedono la firma di un messaggio. Questo risultato è quello aspettato, infatti la firma crittografica richiede un lavoro computazionale maggiore rispetto alla lettura e invio di un messaggio. Node.js dal punto di vista dell'ottimizzazione di operazioni computazionali onerose non è la tecnologia adatta, data la sua natura single thread; per questo motivo la firma dei messaggi è delegata a un modulo software dedicato e ottimizzato scritto in C basato sulle N-API di Node.js.
+Come è possibile notare dalla Figura [[#profiling-offchain][18]] le operazioni più onerose risultano essere il detach del token, l'attach del token e l'invio della propose di settlement, ovvero tutte le operazioni che richiedono la firma di un messaggio. Questo risultato è quello aspettato, infatti la firma crittografica richiede un lavoro computazionale maggiore rispetto alla lettura e invio di un messaggio. Node.js dal punto di vista dell'ottimizzazione di operazioni computazionali onerose non è la tecnologia adatta, data la sua natura single thread; per questo motivo la firma dei messaggi è delegata a un modulo software dedicato e ottimizzato scritto in C basato sulle N-API di Node.js.
 
 ** Considerazioni
 Sulla base dei dati presentati nelle precedenti sezioni, si discutono i risultati in termini di performance e di scalabilità.
 
-**Performance** Su un singolo nodo con hardware adeguato, l'implementazione di FulgurHub presentata in questa tesi può arrivare a gestire fino a 84 transazioni al secondo. In Tabella [[fulgurhub_confronto]] si confronta il throughput di FulgurHub con quello delle principali blockchain. Come è possibile notare FulgurHub permette di ottenere un throughput 5 volte maggiore rispetto a quello della blockchain sottostante (Ethereum) e di decuplicare quello relativo all'attuale implementazione di BitCoin.
+**Performance** Su un singolo nodo con hardware adeguato, l'implementazione di FulgurHub presentata in questa tesi può arrivare a gestire fino a 84 transazioni al secondo. In Tabella [[#fulgurhub_confronto][8]] si confronta il throughput di FulgurHub con quello delle principali blockchain. Come è possibile notare FulgurHub permette di ottenere un throughput 5 volte maggiore rispetto a quello della blockchain sottostante (Ethereum) e di decuplicare quello relativo all'attuale implementazione di BitCoin.
 
-#+CAPTION: Throughput FulgurHub a confronto con le principali blockchain.
-#+LABEL: fulgurhub_confronto
+#+CAPTION: <<fulgurhub_confronto>>Throughput FulgurHub a confronto con le principali blockchain.
+#+NAME: fulgurhub_confronto
 | N° | Tecnologia | Throughput (tx/s) |
 |----+------------+-------------------|
 |  1 | BitCoin    |                 7 |

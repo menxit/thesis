@@ -1,0 +1,25 @@
+\select@language {italian}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {1}{\ignorespaces Deploy on-chain dello smart contract di un payment channel.}}{21}{figure.2.1}
+\contentsline {figure}{\numberline {2}{\ignorespaces Apertura e deposito fondi on-chain in un payment channel.}}{22}{figure.2.2}
+\contentsline {figure}{\numberline {3}{\ignorespaces Join e deposito fondi on-chain in un payment channel.}}{22}{figure.2.3}
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {4}{\ignorespaces \hypertarget {architecture-hub-and-spoke}{}{}Architettura hub-and-spoke di FulgurHub}}{34}{figure.3.4}
+\contentsline {figure}{\numberline {5}{\ignorespaces \hypertarget {sottoscrizione-fulgur-hub}{}{}Sottoscrizione di un FulgurHub}}{38}{figure.3.5}
+\contentsline {figure}{\numberline {6}{\ignorespaces \hypertarget {caso-duso-onchain-onchain}{}{}Pagamento OnChain-OnChain in FulgurHub.}}{39}{figure.3.6}
+\contentsline {figure}{\numberline {7}{\ignorespaces \hypertarget {caso-duso-offchain-offchain}{}{}Pagamento OffChain-OffChain in FulgurHub.}}{40}{figure.3.7}
+\contentsline {figure}{\numberline {8}{\ignorespaces \hypertarget {caso-duso-offchain-onchain}{}{}Pagamento OffChain-OnChain in FulgurHub.}}{42}{figure.3.8}
+\contentsline {figure}{\numberline {9}{\ignorespaces \hypertarget {caso-duso-onchain-offchain}{}{}Pagamento OnChain-OffChain in FulgurHub.}}{43}{figure.3.9}
+\contentsline {figure}{\numberline {10}{\ignorespaces \hypertarget {caso-duso-prelievo-a-caldo}{}{}Prelievo a caldo in FulgurHub.}}{44}{figure.3.10}
+\contentsline {figure}{\numberline {11}{\ignorespaces \hypertarget {caso-duso-ricarica-a-caldo}{}{}Ricarica a caldo in FulgurHub.}}{45}{figure.3.11}
+\contentsline {figure}{\numberline {12}{\ignorespaces \hypertarget {caso-duso-chiusura-canale}{}{}Chiusura canale in FulgurHub.}}{46}{figure.3.12}
+\addvspace {10\p@ }
+\addvspace {10\p@ }
+\contentsline {figure}{\numberline {13}{\ignorespaces \hypertarget {client-ram-chart}{}{}Throughput client al variare della RAM}}{71}{figure.5.13}
+\contentsline {figure}{\numberline {14}{\ignorespaces \hypertarget {client-latenza-chart}{}{}Barchart throughput client al variare della latenza.}}{73}{figure.5.14}
+\contentsline {figure}{\numberline {15}{\ignorespaces \hypertarget {hub-ram-chart}{}{}Barchart throughput hub al variare della RAM}}{74}{figure.5.15}
+\contentsline {figure}{\numberline {16}{\ignorespaces \hypertarget {hub-latenza-chart}{}{}Barchart throughput hub al variare della latenza.}}{76}{figure.5.16}
+\contentsline {figure}{\numberline {17}{\ignorespaces \hypertarget {profiling-messaggi-offchain}{}{}Pagamento OffChain-OffChain in FulgurHub.}}{77}{figure.5.17}
+\contentsline {figure}{\numberline {18}{\ignorespaces \hypertarget {profiling-offchain}{}{}Profiling pagamento OffChain-OffChain}}{77}{figure.5.18}
+\addvspace {10\p@ }
