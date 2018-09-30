@@ -1,4 +1,4 @@
-\documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(papersize)$$papersize$paper,$endif$$for(classoption)$$classoption$$sep$,$endfor$]{$documentclass$}
+\documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(papersize)$$papersize$paper,$endif$$for(classoption)$$classoption$$sep$,$endfor$, oneside]{$documentclass$}
 
 \usepackage[utf8]{inputenc} 
 \usepackage{graphicx}
@@ -222,9 +222,9 @@ $endif$
 \date{$date$}
 
 \usepackage[
-  top=5cm,
-  bottom=5cm,
-  left=4cm,
+  top=4cm,
+  bottom=4cm,
+  left=5cm,
   right=4cm,
 ]{geometry}
 
@@ -246,7 +246,6 @@ $endfor$
 \newcommand{\frontespizio}{
    \thispagestyle{empty}
    \begin{center}
-      \vspace{10mm}
       {\includegraphics[width=0.4 \linewidth]{template/uniroma3-logo}} \\
       \vspace{10mm}
       {\Large UNIVERSIT\`A DEGLI STUDI ROMA TRE} \\
@@ -254,12 +253,12 @@ $endfor$
       {\LARGE {$facolta$}} \\
       {\Large {$corsoDiLaurea$}} \\
       \vspace{15mm}
-      {\LARGE Tesi Di Laurea} \\
+      {\LARGE Tesi Di Laurea Magistrale} \\
       \vspace{15mm}
       {\LARGE {$titoloTesi$}} \\
-      \vspace{15mm}
+      \vspace{10mm}
       {\large Laureando \\  \textbf{{$nomeLaureando$}} \\ Matricola {$matricolaLaureando$}} \\
-      \vspace{7mm}
+      \vspace{3mm}
 
       \begin{tabular}{c  @{\hspace{2.5cm}} c}
         Relatore & Correlatore \\
@@ -273,7 +272,9 @@ $endfor$
 }
 $if(frontespizio)$
 {
+  \newgeometry{top=3cm, bottom=3cm, left=4cm, right=3cm}
   \frontespizio
+  \restoregeometry
 }
 $endif$
 
@@ -292,7 +293,7 @@ $if(dedica)$
 $endif$
 
 \chapter*{Ringraziamenti}
-\small{
+{\setstretch{1.2}
 Grazie a tutti i professori che ho avuto il piacere di conoscere in questi ultimi 5 anni, in particolare il Professor Alberto Paoluzzi, Relatore di questa tesi.
 
 Ridurre in parole i ringraziamenti che meriterebbe l'Ing. Federico Spini, Correlatore di questa tesi non è facile. Federico non si è limitato a guidarmi e consigliarmi, ma ha saputo trasmettermi l'importanza di un metodo educativo basato su un percorso di consapevolezza dialettico.
