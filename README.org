@@ -1070,3 +1070,4 @@ L'utente chiaramente paga una sottoscrizione temporale, una sorta di abbonamento
 Gli strumenti per mettere in piedi l'autogestione finanziaria già sono stati implementati nel lavoro di questa tesi, lo step successivo consiste nel combinarli assieme in maniera corretta.
 
 \newpage
+
