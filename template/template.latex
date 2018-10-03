@@ -1,5 +1,5 @@
 \documentclass[$if(fontsize)$$fontsize$,$endif$$if(lang)$$babel-lang$,$endif$$if(papersize)$$papersize$paper,$endif$$for(classoption)$$classoption$$sep$,$endfor$, oneside]{$documentclass$}
-
+\usepackage{float}
 \usepackage[utf8]{inputenc} 
 \usepackage{graphicx}
 \usepackage{svg}
