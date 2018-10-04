@@ -27,10 +27,7 @@
 * Introduzione
 Nel 2008 viene pubblicato il whitepaper di Bitcoin, una proposta di soluzione al problema della doppia spesa basata sull'utilizzo di una rete peer-to-peer [@nakamoto2008bitcoin].
 
-Il 2009 vede la nascita della prima cryptovaluta, bitcoin, con la pubblicazione
-dell'implementazione del protocollo Bitcoin. Gli standard variano, ma sembra
-essersi formato un consenso nel riferirsi con Bitcoin maiuscolo al
-protocollo e con bitcoin minuscolo alla moneta in se [@TheBitco9:online].
+Il 2009 vede la nascita della prima cryptovaluta, bitcoin, con la pubblicazione dell'implementazione del protocollo Bitcoin. Gli standard variano, ma sembra essersi formato un consenso nel riferirsi con Bitcoin maiuscolo al protocollo e con bitcoin minuscolo alla moneta in se [@TheBitco9:online].
 
 Negli anni successivi decine di protocolli alternativi a Bitcoin sono fioriti. Le cryptovalute da argomento di nicchia hanno visto una costante crescita di adozione. Dal 2009 fino a oggi il numero di transazioni quotidiane è cresciuto più che linearmente, raggiungendo il suo attuale picco storico nel dicembre del 2017, con più di 450K transazioni in un giorno [@BlockchainStats:online].
 
@@ -38,16 +35,22 @@ Questo crescente interesse nei confronti delle cryptovalute si scontra però con
 
 Diverse sono le soluzioni proposte per risolvere i problemi di scalabilità della blockchain e possono essere suddivise in tre categorie:
 - *Algoritmo di consenso* Alla base del whitepaper di Satoshi Nakamoto c'è il Proof Of Work. Modificando il meccanismo alla base della ricerca del consenso è possibile migliorare la scalabilità della blockchain. Ad oggi diverse sono le alternative proposte [@king2012ppcoin], [@bentov2016cryptocurrencies], [@kwon2014tendermint].
-- *Sharding* Questo concetto non è nuovo nel mondo dei database. L'idea è quella di suddividere la blockchain in più parti. La ricerca del consenso avviene in ciascuno di queste parti. Anche da questo punto di vista diversi sono i lavori e le proposte [@luu2016secure], [@AProofof65:online].
+- *Sharding* Questo concetto non è nuovo nel mondo dei database. L'idea è quella di suddividere la blockchain in più parti. La ricerca del consenso avviene in ciascuna di queste parti. Anche da questo punto di vista diversi sono i lavori e le proposte [@luu2016secure], [@AProofof65:online].
 - *Off-chain* Layers è un famoso pattern architetturale. Un forte impiego di questo pattern è stato fatto nell'ambito del networking, vedi pila ISO/OSI. La scalabilità off-chain si realizza costruendo un secondo layer sopra alla blockchain, che permetta di ereditare le sue caratteristiche (sicurezza e distribuzione), aggiungendone delle altre, come la scalabilità.
 
 Questi tre diversi approcci alla scalabilità della blockchain non sono in contrasto l'uno con l'altro, ma anzi possono essere applicati assieme in maniera sinergica. Nel lavoro di questa tesi ho approfondito l'ultima categoria, la scalabilità off-chain. In particolare mi sono occupato delle seguenti attività:
-- Analisi dello stato dell’arte relativa a soluzioni di scalabilità off-chain
+- Analisi stato dell'arte relativa a soluzioni di scalabilità off-chain
 - Realizzazione di un canale di pagamento inestinguibile (IPC)
 - Analisi, progettazione e sviluppo di FulgurHub
 - Prove sperimentali di FulgurHub
 
-In questa tesi il Capitolo due tratta il background necessario, in particolare si approfondisce il design di un payment channel e si introduce l'architettura di FulgurHub. Nel terzo Capitolo si effettua l'analisi nel dettaglio di FulgurHub. Nel quarto Capitolo si descrivono le fasi di progettazione e sviluppo di FulgurHub. Nel quinto Capitolo si mostrano le prove sperimentali relative a quanto è stato implementato e si discutono i risultati in termini di performance e scalabilità.
+FulgurHub è un'architettura per hub di pagamenti off-chain basata sui canali di pagamento inestinguibili che costruisce un layer superiore alla blockchain ereditandone le sue caratteristiche in termini di sicurezza e distribuzione e migliorandone sensibilmente la scalabilità.
+
+I vantaggi principali alla base di FulgurHub derivano dall'uso degli IPC; essi consentono una gestione del bilancio off-chain flessibile il che migliora la UX dei classici payment channel, ma allo stesso tempo favorisce la scalabilità, riducendo il numero di operazioni on-chain necessarie.
+
+Il lavoro svolto in questa tesi ha consentito di dimostrare la fattibilità dei canali di pagamento inestinguibili e dell'architettura FulgurHub.
+
+In questa tesi il Capitolo \ref{background} tratta il background necessario, in particolare si approfondisce il design di un payment channel e si introduce l'architettura di FulgurHub. Nel Capitolo \ref{analisi} si effettua l'analisi nel dettaglio di FulgurHub. Nel Capitolo \ref{progettazione-e-sviluppo} si descrivono le fasi di progettazione e sviluppo di FulgurHub. Nel Capitolo \ref{prove-sperimentali} si mostrano le prove sperimentali relative a quanto è stato implementato e si discutono i risultati in termini di performance e scalabilità.
 
 * Background
 Questo Capitolo descrive il background necessario. In particolare in Sezione \ref{blockchain} si discute la blockchain: come funziona, i suoi casi d'uso e i suoi limiti. In Sezione \ref{state-channel} si descrivono gli state channel, facendo un affondo sui payment channel e sugli inextinguishable payment channel. Infine in Sezione \ref{fulgur-hub} si introduce il protocollo FulgurHub: le sue motivazione, le caratteristiche e i lavori correlati.
@@ -1051,19 +1054,12 @@ Durante il periodo di lavoro di questa tesi è stata realizzata l'implementazion
 
 ** Sviluppi futuri
 *** Pagamenti in denominazione non omogenea
-
-Nell'attuale implementazione di FulgurHub devono collateralizzare il canale con il medesimo simbolo o token, in particolare i pagamenti descritti in Capitolo \ref{analisi} riguardano solamente lo scambio della cryptomoneta relativa alla blockchain sottostante l'implementazione; nel caso specifico Ethereum (ETH). I token scambiati in FulgurHub possono però rappresentare anche altri concetti.
-
-Il lavoro di implementazione sta attualmente affrontando questo aspetto, la possibilità di consentire lo scambio mediante un FulgurHub di token di denominazione non omogenea. Questo consentirà lo swap atomico di token diversi.
+Nell'attuale implementazione di FulgurHub gli utenti devono collateralizzare il canale con il medesimo simbolo o token; in particolare i pagamenti descritti in Capitolo \ref{analisi} riguardano lo scambio della sola cryptomoneta relativa alla blockchain sottostante l'implementazione, nel caso specifico Ethereum (ETH). I token scambiati in FulgurHub possono però rappresentare anche altri concetti. Il lavoro di implementazione sta attualmente affrontando questo aspetto, la possibilità di consentire lo scambio di token di denominazione non omogenea. Questo consentirà lo swap atomico di token diversi.
 
 *** Autogestione finanziaria
-Come visto in Capitolo \ref{analisi} quando si riceve un pagamento OffChain-OffChain esso deve avere un valore minore o uguale al bilancio off-chain dell'hub sul canale di pagamento corrente; in caso contrario il pagamento non può essere ricevuto.
+Come visto in Capitolo \ref{analisi} quando si riceve un pagamento OffChain-OffChain esso deve avere un valore minore o uguale al bilancio off-chain dell'hub sul canale di pagamento corrente; in caso contrario il pagamento non può essere ricevuto. D'altra parte l'hub non conosce le esigenze finanziare dei suoi utenti e quindi non sa a priori quanti fondi off-chain bloccare nel suo bilancio off-chain o con quale frequenza rimpinguarlo. Di seguito viene esposto un approccio detto di autogestione finanziaria dell'hub, il quale non richiede politiche di gestione attive da parte del manager dell'hub.
 
-D'altra parte l'hub non conosce le esigenze finanziare dei suoi utenti e quindi non sa a priori quanti fondi off-chain bloccare nel suo bilancio off-chain o con quale frequenza rimpinguarlo. Di seguito viene esposto un approccio detto di autogestione finanziaria dell'hub, il quale non richiede politiche di gestione attive da parte del manager dell'hub.
-
-La soluzione proposta da FulgurHub si basa sul seguente artificio: l'utente in fase di registrazione di un wallet contrattualizza con l'hub un rapporto tra il suo bilancio off-chain e il bilancio off-chain dell'hub; ad esempio, si ipotizzi che Alice apra un wallet con un rapporto pari a 1; questo significa che il bilancio off-chain dell'hub per conratto deve essere pari almeno al bilancio off-chain di Alice.
-
-Il refill a caldo, in questo scenario che definiamo di "autogestione finanziaria", comporta non solo il refill a caldo del balance off-chain del client richiedente, ma contemporaneamente anche un ritiro a caldo automaticamente innescato per l'hub. Al fine di ripristinare un rapporto concordato e riportato nello smart contract. Specularmente un ritiro a caldo innescato da un utente, attiva un refill a caldo da parte dell’hub. Questo permette all'hub di non partecipare in maniera attiva alla gestione del bilancio.
+La soluzione proposta da FulgurHub si basa sul seguente artificio: l'utente in fase di registrazione di un wallet contrattualizza con l'hub un rapporto tra il suo bilancio off-chain e il bilancio off-chain dell'hub; ad esempio, si ipotizzi che Alice apra un wallet con un rapporto pari a 1; questo significa che il bilancio off-chain dell'hub per contratto deve essere pari almeno al bilancio off-chain di Alice. Il refill a caldo, in questo scenario che definiamo di /autogestione finanziaria/, comporta non solo il refill a caldo del balance off-chain del client richiedente, ma contemporaneamente anche un ritiro a caldo automaticamente innescato per l'hub, al fine di ripristinare un rapporto concordato e riportato nello smart contract. Specularmente un ritiro a caldo innescato da un utente, attiva un refill a caldo da parte dell’hub. Questo permette all'hub di non partecipare in maniera attiva alla gestione del bilancio.
 
 L'utente chiaramente paga una sottoscrizione temporale, una sorta di abbonamento ai servizi dell’hub che remunera l’anticipo di capitale supportato dall’hub. Un rapporto particolarmente basso potrebbe essere indicato per un utente che riceve pochi pagamenti, pagando di conseguenza una sottoscrizione bassa a causa nel minor anticipo di capitale richiesto all'hub; un utente che invece riceve un gran numero di pagamenti avrà maggiore interesse nel concordare un rapporto più alto, richiedendo dunque un anticipo di capitale più alto e pagando di conseguenza una sottoscrizione più alta.
 
